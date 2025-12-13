@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Display</title>
+  <title>شاشة عرض الدور الآلي</title>
   <style>
 :root{
   --bg:#ffffff;
@@ -24,22 +24,59 @@
   --radius:18px;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--text);
+}
 a{color:var(--blue)}
 .container{max-width:1020px;margin:0 auto;padding:18px}
-.header{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.header{
+  display:flex;gap:14px;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
 .brand{display:flex;gap:12px;align-items:center}
-.logo{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);background:rgba(2,6,23,.02);object-fit:contain;padding:6px;}
+.logo{
+  width:56px;height:56px;border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(2,6,23,.02);
+  object-fit:contain;padding:6px;
+}
 .title{font-weight:1100;font-size:20px;color:var(--black)}
 .subtitle{font-size:13px;color:var(--muted);line-height:1.5}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;backdrop-filter:saturate(140%) blur(2px);}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+  backdrop-filter:saturate(140%) blur(2px);
+}
 .grid{display:grid;gap:14px}
 .grid2{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 input,select,textarea,button{font-family:inherit;font-size:16px}
-input,select,textarea{width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--black);outline:none;}
+input,select,textarea{
+  width:100%;
+  padding:12px 12px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.8);
+  color:var(--black);
+  outline:none;
+}
 textarea{resize:vertical;min-height:110px}
-button{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--blueBg);color:var(--black);cursor:pointer;font-weight:1100;display:inline-flex;align-items:center;gap:10px;justify-content:center;}
+button{
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:var(--blueBg);
+  color:var(--black);
+  cursor:pointer;
+  font-weight:1000;
+  display:inline-flex;align-items:center;gap:10px;justify-content:center;
+}
 button:hover{filter:brightness(.98)}
 button.blue{background:var(--blueBg);border-color:rgba(37,99,235,.22)}
 button.red{background:var(--redBg);border-color:rgba(220,38,38,.22)}
@@ -48,10 +85,22 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.65);font-size:12px;color:var(--muted);}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.65);
+  font-size:12px;color:var(--muted);
+}
 .kpi{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.kpi .num{font-size:44px;font-weight:1100;letter-spacing:.5px}
+.kpi .lbl{color:var(--muted)}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none !important}
+
+/* Icons */
 .ico{width:18px;height:18px;display:inline-block}
 .ico.blue{color:var(--blue);opacity:.92}
 .ico.red{color:var(--red);opacity:.92}
@@ -61,13 +110,37 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 @media (max-width:1100px){.cols{grid-template-columns:1fr}}
 .colTitle{font-weight:1100;margin-bottom:10px;color:var(--black);display:flex;gap:10px;align-items:center}
 .list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.box{border:1px solid var(--line);background:rgba(255,255,255,.65);border-radius:16px;padding:10px;text-align:center;font-weight:1100;box-shadow:0 10px 18px rgba(2,6,23,.05);}
+.box{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.65);
+  border-radius:16px;
+  padding:10px;
+  text-align:center;
+  font-weight:1100;
+  box-shadow:0 10px 18px rgba(2,6,23,.05);
+}
 .box small{display:block;margin-top:6px;color:var(--muted);font-weight:800;font-size:12px}
-.noteBar{border:1px solid rgba(37,99,235,.25);background:rgba(251,191,36,.40);border-radius:16px;overflow:hidden;padding:8px 0;box-shadow:0 10px 18px rgba(2,6,23,.04);}
+.noteBar{
+  border:1px solid rgba(37,99,235,.25);
+  background:rgba(251,191,36,.38);
+  border-radius:16px;
+  overflow:hidden;
+  padding:8px 0;
+  box-shadow:0 10px 18px rgba(2,6,23,.04);
+}
 .marqueeWrap{direction:ltr;white-space:nowrap;overflow:hidden}
-.marquee{display:inline-block;padding-left:100%;animation: scroll-ltr 18s linear infinite;font-weight:1100;color:#111827;}
-@keyframes scroll-ltr{0%{ transform: translateX(-100%); }100%{ transform: translateX(100%); }}
-.announce{border:2px solid rgba(220,38,38,.35);background:rgba(220,38,38,.06)}
+.marquee{
+  display:inline-block;
+  padding-left:100%;
+  animation: scroll-ltr 18s linear infinite;
+  font-weight:1100;
+  color:#111827;
+}
+@keyframes scroll-ltr{
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+.announce{border:1px dashed rgba(220,38,38,.35);background:rgba(220,38,38,.06)}
 .announceText{font-size:28px;font-weight:1200;line-height:1.55;color:var(--black)}
 .bigNum{font-size:90px;font-weight:1250;letter-spacing:1px;color:var(--black)}
 @media (max-width:700px){.bigNum{font-size:64px}}
@@ -75,63 +148,62 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 </head>
 <body>
 <div class="screen">
-  <div class="header">
-    <div class="brand">
-      <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
-      <div>
-        <div class="title">شاشة عرض الدور الآلي لمعلمين السياقة بمعهد السلامة المرورية - صحار</div>
-        <div class="subtitle">تحديث تلقائي مباشر للأرقام</div>
-      </div>
-    </div>
-    <span class="pill" id="status">غير متصل</span>
-  </div>
-
-  <div class="card">
-    <div class="kpi">
-      <div class="lbl">الرقم الحالي</div>
-      <div class="bigNum" id="curNum">—</div>
-      <span class="pill" id="curGender">—</span>
-    </div>
-    <div class="small">آخر تحديث: <span id="updatedAt">-</span></div>
-    <div class="small">قد يحتاج الصوت إلى نقرة واحدة على الصفحة لتفعيل التشغيل.</div>
-  </div>
-
-  <div class="noteBar" style="margin-top:12px">
-    <div class="marqueeWrap">
-      <div class="marquee" id="barText">—</div>
-    </div>
-  </div>
-
-  <div class="cols" style="margin-top:14px">
-    <div class="card">
-      <div class="colTitle"><span id="icoMen"></span>الأرقام السابقة (رجال)</div>
-      <div class="list" id="menList"></div>
-    </div>
-
-    <div class="card">
-      <div class="colTitle"><span id="icoMid"></span>آخر 15 رقم</div>
-      <div class="list" id="allList"></div>
-
-      <div class="hidden" id="announceBox">
-        <div class="card announce" style="margin-top:10px">
-          <div class="colTitle"><span id="icoBell"></span>رسالة المدير</div>
-          <div class="small">وقت الإرسال: <span id="annAt">-</span></div>
-          <div class="announceText" id="annText">—</div>
+    <div class="header">
+      <div class="brand">
+        <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
+        <div>
+          <div class="title">شاشة عرض الدور الآلي لمعلمين السياقة بمعهد السلامة المرورية - صحار</div>
+          <div class="subtitle">تحديث تلقائي مباشر</div>
         </div>
       </div>
+      <span class="pill" id="status">غير متصل</span>
     </div>
 
     <div class="card">
-      <div class="colTitle"><span id="icoWomen"></span>الأرقام السابقة (نساء)</div>
-      <div class="list" id="womenList"></div>
+      <div class="kpi">
+        <div class="lbl">الرقم الحالي</div>
+        <div class="bigNum" id="curNum">—</div>
+        <span class="pill" id="curGender">—</span>
+      </div>
+      <div class="small">آخر تحديث: <span id="updatedAt">-</span></div>
+      <div class="small">ملاحظة: قد يحتاج الصوت إلى نقرة واحدة على الصفحة لتفعيل التشغيل.</div>
     </div>
+
+    <div class="noteBar" style="margin-top:12px">
+      <div class="marqueeWrap">
+        <div class="marquee" id="barText">—</div>
+      </div>
+    </div>
+
+    <div class="cols" style="margin-top:14px">
+      <div class="card">
+        <div class="colTitle"><span id="icoMen"></span>الأرقام السابقة (رجال)</div>
+        <div class="list" id="menList"></div>
+      </div>
+
+      <div class="card">
+        <div class="colTitle"><span id="icoMid"></span>آخر 15 رقم</div>
+        <div class="list" id="allList"></div>
+
+        <div class="hidden" id="announceBox">
+          <div class="card announce" style="margin-top:10px">
+            <div class="colTitle"><span id="icoBell"></span>رسالة المدير</div>
+            <div class="small">وقت الإرسال: <span id="annAt">-</span></div>
+            <div class="announceText" id="annText">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="colTitle"><span id="icoWomen"></span>الأرقام السابقة (نساء)</div>
+        <div class="list" id="womenList"></div>
+      </div>
+    </div>
+
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
 
-  <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
-</div>
-
-<audio id="callSound" src="/assets/call.mp3" preload="auto"></audio>
-<audio id="adminSound" src="/assets/admin.mp3" preload="auto"></audio>
+  <audio id="callSound" src="/assets/call.mp3" preload="auto"></audio>
 
 <script>
   const I = {
@@ -145,12 +217,6 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><path d="M12 11a4 4 0 100-8 4 4 0 000 8z"></path></svg>`,
     display:(c="black")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path><path d="M12 16v4"></path></svg>`,
-    logout:(c="black")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
-      <path d="M16 17l5-5-5-5"></path>
-      <path d="M21 12H9"></path></svg>`,
-    refresh:(c="blue")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 12a9 9 0 11-3-6.7"></path><path d="M21 3v6h-6"></path></svg>`,
   };
 </script>
 
@@ -175,12 +241,9 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   const annAt = document.getElementById("annAt");
 
   const callSound = document.getElementById("callSound");
-  const adminSound = document.getElementById("adminSound");
-  callSound.volume = 1.0; // صوت قوي حسب طلبك (فقط نغمة النداء)
-  adminSound.volume = 0.85; // شوي قوي لرسالة المدير
 
   let lastCur = null;
-  let lastMsgKey = null;
+  let lastAnnActive = false;
 
   function playCall(){
     try{
@@ -189,14 +252,6 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       if(p && p.catch) p.catch(()=>{});
     }catch(e){}
   }
-  function playAdmin(){
-    try{
-      adminSound.currentTime = 0;
-      const p = adminSound.play();
-      if(p && p.catch) p.catch(()=>{});
-    }catch(e){}
-  }
-
 
   function boxForCall(it){
     const d = document.createElement("div");
@@ -235,17 +290,15 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       curGender.textContent = s.current ? (s.current.gender === "female" ? "نساء" : "رجال") : "—";
       updatedAt.textContent = App.fmtTime(s.updatedAt);
 
-      const ticker = (s.tickerMessage && (s.tickerMessage.text||"").trim()) ? s.tickerMessage.text : "يرجى متابعة شاشة الدور الآلي...";
-      barText.textContent = ticker;
+      const bar = (s.displayMessage && s.displayMessage.text) ? s.displayMessage.text : "يرجى متابعة شاشة الدور الآلي...";
+      barText.textContent = bar;
 
       const active = !!(s.displayMessage && s.displayMessage.active && (s.displayMessage.text||"").trim());
-
-      const msgKey = (s.displayMessage && s.displayMessage.active) ? ((s.displayMessage.at||"") + "|" + (s.displayMessage.text||"")) : "";
-      if(active && msgKey && msgKey !== lastMsgKey){
-        playAdmin();
-        lastMsgKey = msgKey;
+      if(active && !lastAnnActive){
+        App.ding();
       }
-      if(!active){ lastMsgKey = null; }
+      lastAnnActive = active;
+
       if(active){
         allList.classList.add("hidden");
         announceBox.classList.remove("hidden");

@@ -2,7 +2,7 @@
   "name": "traffic-queue-do",
   "private": true,
   "type": "module",
-  "version": "4.0.1",
+  "version": "3.0.0",
   "scripts": {
     "deploy": "wrangler deploy"
   }
