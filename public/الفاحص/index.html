@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Login</title>
+  <title>شاشة الفاحص</title>
   <style>
 :root{
   --bg:#ffffff;
@@ -65,36 +65,57 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
     <div class="brand">
       <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
       <div>
-        <div class="title">خاص بتسجيل دخول الفاحص / المدير</div>
-        <div class="subtitle">نظام الدور الآلي لمعلمين السياقة – معهد السلامة المرورية صحار</div>
+        <div class="title">شاشة الفاحص</div>
+        <div class="subtitle">نداء تلميذ + رسالة للمدير</div>
       </div>
     </div>
-    <span class="pill" id="status">جاهز</span>
+    <div class="row">
+      <span class="pill" id="who">-</span>
+      <span class="pill" id="status">جاهز</span>
+      <a class="pill" href="/العرض" style="text-decoration:none">شاشة العرض</a>
+      <button class="black" id="btnLogout"><span id="icoLogout"></span>تسجيل الخروج</button>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="grid">
-      <div class="grid grid2">
-        <div>
-          <label class="small">اسم المستخدم</label>
-          <input id="u" placeholder="مثال: admin أو اسم الفاحص" autocomplete="username"/>
-        </div>
-        <div>
-          <label class="small">كلمة المرور</label>
-          <input id="p" type="password" placeholder="••••••••" autocomplete="current-password"/>
-        </div>
+  <div class="grid grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:1100">نداء تلميذ</div>
+        <span id="icoCall"></span>
       </div>
+      <div class="grid">
+        <div>
+          <label class="small">رقم التلميذ</label>
+          <input id="num" inputmode="numeric" placeholder="مثال: 12"/>
+        </div>
+        <div class="grid grid2">
+          <div>
+            <label class="small">النوع</label>
+            <select id="gender">
+              <option value="male">رجال</option>
+              <option value="female">نساء</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:end">
+            <button class="blue" id="btnNext"><span id="icoNext"></span>نداء</button>
+          </div>
+        </div>
+        <button class="black" id="btnPrev"><span id="icoPrev"></span>التلميذ السابق</button>
+      </div>
+    </div>
 
-      <button class="blue" id="btn"><span id="icoLogin"></span>دخول</button>
-
-      <div class="small">
-        <div>حساب المدير الافتراضي (أول مرة فقط): <b>admin / admin1234</b></div>
-        <div>روابط الصفحات:</div>
-        <ul>
-          <li><a href="/العرض">شاشة العرض</a></li>
-          <li><a href="/الفاحص">شاشة الفاحص</a></li>
-          <li><a href="/المدير">لوحة المدير</a></li>
-        </ul>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:1100">رسالة للمدير</div>
+        <span id="icoSend"></span>
+      </div>
+      <div class="grid">
+        <textarea id="msgToAdmin" placeholder="اكتب رسالة للمدير..."></textarea>
+        <button class="blue" id="btnToAdmin"><span id="icoSend2"></span>إرسال للمدير</button>
+        <div class="small">آخر رسالة من المدير: <span id="fromAdminAt">-</span></div>
+        <div class="card" style="background:rgba(255,255,255,.65);box-shadow:none">
+          <div id="fromAdminText" style="font-weight:1100">لا توجد رسالة.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -124,28 +145,91 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 </script>
 
 <script>
-  document.getElementById("icoLogin").innerHTML = I.users("black");
-  const statusEl = document.getElementById("status");
-  const u = document.getElementById("u");
-  const p = document.getElementById("p");
-  const btn = document.getElementById("btn");
+  document.getElementById("icoCall").innerHTML = I.display("black");
+  document.getElementById("icoNext").innerHTML = I.bell("blue");
+  document.getElementById("icoPrev").innerHTML = I.display("black");
+  document.getElementById("icoSend").innerHTML = I.send("blue");
+  document.getElementById("icoSend2").innerHTML = I.send("blue");
+  document.getElementById("icoLogout").innerHTML = I.logout("black");
 
-  async function go(){
-    try{
-      App.setStatus(statusEl, "جاري الدخول...");
-      const r = await App.API.login(u.value.trim(), p.value);
-      localStorage.setItem("token", r.token);
-      localStorage.setItem("username", r.username);
-      localStorage.setItem("role", r.role);
-      App.setStatus(statusEl, "تم الدخول ✅");
-      if(r.role === "admin") location.href = "/المدير";
-      else location.href = "/الفاحص";
-    }catch(e){
-      App.setStatus(statusEl, "فشل: " + e.message, false);
-    }
+  const who = document.getElementById("who");
+  const statusEl = document.getElementById("status");
+
+  const num = document.getElementById("num");
+  const gender = document.getElementById("gender");
+  const btnNext = document.getElementById("btnNext");
+  const btnPrev = document.getElementById("btnPrev");
+  const btnLogout = document.getElementById("btnLogout");
+
+  const msgToAdmin = document.getElementById("msgToAdmin");
+  const btnToAdmin = document.getElementById("btnToAdmin");
+  const fromAdminText = document.getElementById("fromAdminText");
+  const fromAdminAt = document.getElementById("fromAdminAt");
+
+  function guard(){
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username") || "-";
+    who.textContent = username;
+    if(!token){ location.href = "/تسجيل-الدخول"; }
   }
-  btn.addEventListener("click", go);
-  p.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") go(); });
+
+  async function refresh(){
+    try{
+      const r = await App.API.state();
+      const s = r.state;
+      const me = localStorage.getItem("username") || "";
+      const msg = (s.adminToStaff && me && s.adminToStaff[me]) ? s.adminToStaff[me] : null;
+      if(msg && (msg.text||"").trim()){
+        fromAdminText.textContent = msg.text;
+        fromAdminAt.textContent = App.fmtTime(msg.at);
+      }else{
+        fromAdminText.textContent = "لا توجد رسالة.";
+        fromAdminAt.textContent = "-";
+      }
+    }catch(e){}
+  }
+
+  btnNext.addEventListener("click", async ()=>{
+    try{
+      App.setStatus(statusEl, "جاري النداء...");
+      await App.API.next(num.value.trim(), gender.value);
+      num.value = "";
+      App.setStatus(statusEl, "تم ✅");
+      refresh();
+    }catch(e){
+      App.setStatus(statusEl, "خطأ: " + e.message, false);
+    }
+  });
+
+  btnPrev.addEventListener("click", async ()=>{
+    try{
+      App.setStatus(statusEl, "رجوع...");
+      await App.API.prev();
+      App.setStatus(statusEl, "تم ✅");
+      refresh();
+    }catch(e){
+      App.setStatus(statusEl, "لا يوجد سابق", false);
+    }
+  });
+
+  btnToAdmin.addEventListener("click", async ()=>{
+    try{
+      App.setStatus(statusEl, "إرسال...");
+      await App.API.toAdmin(msgToAdmin.value);
+      msgToAdmin.value = "";
+      App.setStatus(statusEl, "تم إرسال الرسالة ✅");
+    }catch(e){
+      App.setStatus(statusEl, "خطأ: " + e.message, false);
+    }
+  });
+
+  btnLogout.addEventListener("click", async ()=>{
+    try{ await App.API.logout(); }catch(e){}
+    localStorage.removeItem("token"); localStorage.removeItem("username"); localStorage.removeItem("role");
+    location.href="/تسجيل-الدخول";
+  });
+
+  guard(); refresh(); setInterval(refresh, 1200);
 </script>
 <script src="/app.js"></script>
 </body>
