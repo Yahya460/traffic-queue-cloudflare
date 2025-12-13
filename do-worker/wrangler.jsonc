@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "traffic-queue-do",
+  "main": "src/index.js",
+  "compatibility_date": "2025-11-01",
+  "durable_objects": {
+    "bindings": [
+      { "name": "QUEUE", "class_name": "QueueDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["QueueDO"] }
+  ]
+}

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>شاشة العرض - نظام الدور</title>
+  <style>
+:root{
+  --bg:#0b1220;
+  --card:#0f1a2b;
+  --muted:#9aa4b2;
+  --text:#e6edf6;
+  --accent:#34d399;
+  --danger:#ef4444;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(180deg,#070b13 0%, #0b1220 35%, #0a1020 100%);
+  color:var(--text);
+}
+.container{max-width:980px;margin:0 auto;padding:18px}
+.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand{display:flex;gap:10px;align-items:center}
+.badge{font-size:12px;color:#052e1a;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);padding:4px 10px;border-radius:999px}
+.card{
+  background:rgba(15,26,43,.92);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  padding:16px;
+}
+.grid{display:grid;gap:14px}
+.grid2{grid-template-columns:1fr 1fr}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+input,select,textarea,button{
+  font-family:inherit;
+  font-size:16px;
+}
+input,select,textarea{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  outline:none;
+}
+textarea{resize:vertical;min-height:110px}
+button{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(52,211,153,.18);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+}
+button:hover{filter:brightness(1.08)}
+button.secondary{background:rgba(255,255,255,.06)}
+button.danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.28)}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.kpi{display:flex;gap:12px;align-items:baseline}
+.kpi .num{font-size:42px;font-weight:900;letter-spacing:1px}
+.kpi .lbl{color:var(--muted)}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+.hidden{display:none !important}
+
+.screen{max-width:1200px;margin:0 auto;padding:16px}
+.big{font-size:92px;font-weight:1000;text-align:center;line-height:1.05}
+@media (max-width:700px){.big{font-size:64px}}
+.cols{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px}
+@media (max-width:1000px){.cols{grid-template-columns:1fr}}
+.colTitle{font-weight:900;margin-bottom:8px}
+.list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.box{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:14px;padding:10px;text-align:center;font-weight:900}
+.note{border:1px dashed rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+
+  </style>
+</head>
+<body>
+
+  <div class="screen">
+    <div class="header">
+      <div class="brand">
+        <div>
+          <div style="font-weight:1000;font-size:22px">شاشة العرض</div>
+          <div class="small">تحديث تلقائي كل 1.5 ثانية</div>
+        </div>
+      </div>
+      <span class="pill" id="status">غير متصل</span>
+    </div>
+
+    <div class="card">
+      <div class="kpi">
+        <div class="lbl">الرقم الحالي</div>
+        <div class="num" id="curNum">—</div>
+        <div class="pill" id="curGender">—</div>
+      </div>
+      <div class="small">آخر تحديث: <span id="updatedAt">-</span></div>
+    </div>
+
+    <div class="card note" style="margin-top:14px">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:900">ملاحظة عامة</div>
+          <div class="small">آخر ملاحظة من: <b id="noteBy">-</b></div>
+        </div>
+        <a href="login.html" style="color:var(--accent)">تسجيل الدخول</a>
+      </div>
+      <div style="margin-top:10px;font-size:18px" id="noteText">لا توجد ملاحظة.</div>
+    </div>
+
+    <div class="cols" style="margin-top:14px">
+      <div class="card">
+        <div class="colTitle">الأرقام السابقة (رجال)</div>
+        <div class="list" id="menList"></div>
+      </div>
+
+      <div class="card">
+        <div class="colTitle">آخر 15 رقم</div>
+        <div class="list" id="allList"></div>
+      </div>
+
+      <div class="card">
+        <div class="colTitle">الأرقام السابقة (نساء)</div>
+        <div class="list" id="womenList"></div>
+      </div>
+    </div>
+
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const curNum = document.getElementById("curNum");
+    const curGender = document.getElementById("curGender");
+    const updatedAt = document.getElementById("updatedAt");
+    const noteText = document.getElementById("noteText");
+    const noteBy = document.getElementById("noteBy");
+    const allList = document.getElementById("allList");
+    const menList = document.getElementById("menList");
+    const womenList = document.getElementById("womenList");
+
+    function fill(listEl, items){
+      listEl.innerHTML = "";
+      (items || []).forEach(it=>{
+        const d = document.createElement("div");
+        d.className = "box";
+        d.textContent = it?.number ?? it;
+        listEl.appendChild(d);
+      });
+      if(!(items||[]).length){
+        const d = document.createElement("div");
+        d.className = "small";
+        d.textContent = "لا توجد بيانات.";
+        listEl.appendChild(d);
+      }
+    }
+
+    async function tick(){
+      try{
+        const r = await App.API.state();
+        const s = r.state;
+        App.setStatus(statusEl, "متصل ✅", true);
+
+        curNum.textContent = s.current ? s.current.number : "—";
+        curGender.textContent = s.current ? (s.current.gender === "female" ? "نساء" : "رجال") : "—";
+        updatedAt.textContent = App.fmtTime(s.updatedAt);
+
+        noteText.textContent = s.note ? s.note : "لا توجد ملاحظة.";
+        noteBy.textContent = s.noteBy || "-";
+
+        fill(allList, (s.previous || []).map(x=>x));
+        fill(menList, (s.previous || []).filter(x=>x.gender!=="female"));
+        fill(womenList, (s.previous || []).filter(x=>x.gender==="female"));
+      }catch(e){
+        App.setStatus(statusEl, "غير متصل: " + e.message, false);
+      }
+    }
+
+    tick();
+    setInterval(tick, 1500);
+  </script>
+
+<script src="app.js"></script>
+</body>
+</html>

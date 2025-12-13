@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>شاشة الموظف - نظام الدور</title>
+  <style>
+:root{
+  --bg:#0b1220;
+  --card:#0f1a2b;
+  --muted:#9aa4b2;
+  --text:#e6edf6;
+  --accent:#34d399;
+  --danger:#ef4444;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(180deg,#070b13 0%, #0b1220 35%, #0a1020 100%);
+  color:var(--text);
+}
+.container{max-width:980px;margin:0 auto;padding:18px}
+.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand{display:flex;gap:10px;align-items:center}
+.badge{font-size:12px;color:#052e1a;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);padding:4px 10px;border-radius:999px}
+.card{
+  background:rgba(15,26,43,.92);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  padding:16px;
+}
+.grid{display:grid;gap:14px}
+.grid2{grid-template-columns:1fr 1fr}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+input,select,textarea,button{
+  font-family:inherit;
+  font-size:16px;
+}
+input,select,textarea{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  outline:none;
+}
+textarea{resize:vertical;min-height:110px}
+button{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(52,211,153,.18);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+}
+button:hover{filter:brightness(1.08)}
+button.secondary{background:rgba(255,255,255,.06)}
+button.danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.28)}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.kpi{display:flex;gap:12px;align-items:baseline}
+.kpi .num{font-size:42px;font-weight:900;letter-spacing:1px}
+.kpi .lbl{color:var(--muted)}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+.hidden{display:none !important}
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div>
+          <div style="font-weight:1000;font-size:22px">شاشة الموظف</div>
+          <div class="small">نداء رقم + ملاحظة عامة</div>
+        </div>
+      </div>
+      <div class="row">
+        <span class="pill" id="who">-</span>
+        <span class="pill" id="status">جاهز</span>
+        <a class="pill" href="display.html" style="color:var(--accent);text-decoration:none">شاشة العرض</a>
+      </div>
+    </div>
+
+    <div class="grid grid2">
+      <div class="card">
+        <div style="font-weight:900;margin-bottom:10px">نداء رقم جديد</div>
+        <div class="grid">
+          <div>
+            <label class="small">رقم التلميذ</label>
+            <input id="num" inputmode="numeric" placeholder="مثال: 12"/>
+          </div>
+          <div class="grid grid2">
+            <div>
+              <label class="small">النوع</label>
+              <select id="gender">
+                <option value="male">رجال</option>
+                <option value="female">نساء</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:end">
+              <button id="btnNext">نداء</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="secondary" id="btnPrev">العميل السابق</button>
+            <button class="secondary" id="btnLogout">خروج</button>
+          </div>
+          <div class="small">الدور محفوظ بشكل دائم (حتى لو صار Restart).</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:900;margin-bottom:10px">ملاحظة عامة (تظهر في شاشة العرض)</div>
+        <div class="grid">
+          <textarea id="note" placeholder="اكتب الملاحظة هنا..."></textarea>
+          <button id="btnNote">إرسال الملاحظة</button>
+          <div class="small">تظهر باسم الموظف الذي أرسلها.</div>
+        </div>
+
+        <hr/>
+        <div style="font-weight:900;margin-bottom:8px">الحالة الحالية</div>
+        <div class="kpi">
+          <div class="lbl">الرقم الحالي</div>
+          <div class="num" id="curNum">—</div>
+          <div class="pill" id="curGender">—</div>
+        </div>
+        <div class="small">آخر تحديث: <span id="updatedAt">-</span></div>
+      </div>
+    </div>
+
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+  </div>
+
+  <script>
+    const who = document.getElementById("who");
+    const statusEl = document.getElementById("status");
+    const num = document.getElementById("num");
+    const gender = document.getElementById("gender");
+    const btnNext = document.getElementById("btnNext");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNote = document.getElementById("btnNote");
+    const note = document.getElementById("note");
+    const btnLogout = document.getElementById("btnLogout");
+    const curNum = document.getElementById("curNum");
+    const curGender = document.getElementById("curGender");
+    const updatedAt = document.getElementById("updatedAt");
+
+    function guard(){
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      const username = localStorage.getItem("username") || "-";
+      who.textContent = username + " (" + (role || "-") + ")";
+      if(!token){ location.href = "login.html"; }
+    }
+
+    async function refresh(){
+      try{
+        const r = await App.API.state();
+        const s = r.state;
+        curNum.textContent = s.current ? s.current.number : "—";
+        curGender.textContent = s.current ? (s.current.gender === "female" ? "نساء" : "رجال") : "—";
+        updatedAt.textContent = App.fmtTime(s.updatedAt);
+      }catch(e){}
+    }
+
+    btnNext.addEventListener("click", async ()=>{
+      try{
+        App.setStatus(statusEl, "جاري النداء...");
+        await App.API.next(num.value.trim(), gender.value);
+        num.value = "";
+        App.setStatus(statusEl, "تم ✅");
+        refresh();
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    });
+
+    btnPrev.addEventListener("click", async ()=>{
+      try{
+        App.setStatus(statusEl, "رجوع...");
+        await App.API.prev();
+        App.setStatus(statusEl, "تم ✅");
+        refresh();
+      }catch(e){
+        App.setStatus(statusEl, "لا يوجد سابق", false);
+      }
+    });
+
+    btnNote.addEventListener("click", async ()=>{
+      try{
+        App.setStatus(statusEl, "جاري إرسال الملاحظة...");
+        await App.API.note(note.value);
+        App.setStatus(statusEl, "تم إرسال الملاحظة ✅");
+        refresh();
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    });
+
+    btnLogout.addEventListener("click", async ()=>{
+      try{ await App.API.logout(); }catch(e){}
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("role");
+      location.href = "login.html";
+    });
+
+    guard();
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+
+<script src="app.js"></script>
+</body>
+</html>

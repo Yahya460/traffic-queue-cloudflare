@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>لوحة المدير - نظام الدور</title>
+  <style>
+:root{
+  --bg:#0b1220;
+  --card:#0f1a2b;
+  --muted:#9aa4b2;
+  --text:#e6edf6;
+  --accent:#34d399;
+  --danger:#ef4444;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(180deg,#070b13 0%, #0b1220 35%, #0a1020 100%);
+  color:var(--text);
+}
+.container{max-width:980px;margin:0 auto;padding:18px}
+.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand{display:flex;gap:10px;align-items:center}
+.badge{font-size:12px;color:#052e1a;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);padding:4px 10px;border-radius:999px}
+.card{
+  background:rgba(15,26,43,.92);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  padding:16px;
+}
+.grid{display:grid;gap:14px}
+.grid2{grid-template-columns:1fr 1fr}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+input,select,textarea,button{
+  font-family:inherit;
+  font-size:16px;
+}
+input,select,textarea{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  outline:none;
+}
+textarea{resize:vertical;min-height:110px}
+button{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(52,211,153,.18);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+}
+button:hover{filter:brightness(1.08)}
+button.secondary{background:rgba(255,255,255,.06)}
+button.danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.28)}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.kpi{display:flex;gap:12px;align-items:baseline}
+.kpi .num{font-size:42px;font-weight:900;letter-spacing:1px}
+.kpi .lbl{color:var(--muted)}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+.hidden{display:none !important}
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div>
+          <div style="font-weight:1000;font-size:22px">لوحة المدير</div>
+          <div class="small">إدارة الموظفين + الإحصائيات + تغيير كلمة المرور</div>
+        </div>
+      </div>
+      <div class="row">
+        <span class="pill" id="who">-</span>
+        <span class="pill" id="status">جاهز</span>
+        <a class="pill" href="display.html" style="color:var(--accent);text-decoration:none">شاشة العرض</a>
+      </div>
+    </div>
+
+    <div class="grid grid2">
+      <div class="card">
+        <div style="font-weight:900;margin-bottom:10px">إضافة مستخدم</div>
+        <div class="grid">
+          <div class="grid grid2">
+            <div>
+              <label class="small">اسم المستخدم</label>
+              <input id="newUser" placeholder="مثال: يوسف"/>
+            </div>
+            <div>
+              <label class="small">كلمة المرور</label>
+              <input id="newPass" type="password" placeholder="••••••••"/>
+            </div>
+          </div>
+          <div class="grid grid2">
+            <div>
+              <label class="small">الدور</label>
+              <select id="newRole">
+                <option value="staff">موظف</option>
+                <option value="admin">مدير</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:end">
+              <button id="btnAdd">إضافة</button>
+            </div>
+          </div>
+          <div class="small">⚠️ تنبيه: غيّر كلمة مرور admin من الأسفل.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:900;margin-bottom:10px">الإحصائيات</div>
+        <div class="kpi">
+          <div class="lbl">إجمالي النداءات</div>
+          <div class="num" id="stTotal">0</div>
+        </div>
+        <div class="row">
+          <span class="pill">رجال: <b id="stM">0</b></span>
+          <span class="pill">نساء: <b id="stF">0</b></span>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="danger" id="btnResetStats">تصفير الإحصائيات</button>
+          <button class="secondary" id="btnLogout">خروج</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:900">قائمة المستخدمين</div>
+        <button class="secondary" id="btnRefresh">تحديث</button>
+      </div>
+      <div class="small" style="margin:8px 0">ملاحظة: لا تحذف admin.</div>
+      <div style="overflow:auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>اسم المستخدم</th>
+              <th>الدور</th>
+              <th>تغيير كلمة المرور</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div style="font-weight:900;margin-bottom:10px">تغيير كلمة مرور admin سريعًا</div>
+      <div class="grid grid2">
+        <div>
+          <label class="small">كلمة مرور جديدة لـ admin</label>
+          <input id="adminPw" type="password" placeholder="••••••••"/>
+        </div>
+        <div style="display:flex;align-items:end">
+          <button id="btnAdminPw">حفظ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+  </div>
+
+  <script>
+    const who = document.getElementById("who");
+    const statusEl = document.getElementById("status");
+    const tb = document.getElementById("tb");
+    const newUser = document.getElementById("newUser");
+    const newPass = document.getElementById("newPass");
+    const newRole = document.getElementById("newRole");
+    const btnAdd = document.getElementById("btnAdd");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const btnResetStats = document.getElementById("btnResetStats");
+    const btnLogout = document.getElementById("btnLogout");
+    const stTotal = document.getElementById("stTotal");
+    const stM = document.getElementById("stM");
+    const stF = document.getElementById("stF");
+    const adminPw = document.getElementById("adminPw");
+    const btnAdminPw = document.getElementById("btnAdminPw");
+
+    function guard(){
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      const username = localStorage.getItem("username") || "-";
+      who.textContent = username + " (" + (role || "-") + ")";
+      if(!token) location.href = "login.html";
+      if(role !== "admin") location.href = "staff.html";
+    }
+
+    function rowUser(u){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><b>${u.username}</b></td>
+        <td>${u.role}</td>
+        <td>
+          <div class="row" style="justify-content:center">
+            <input style="max-width:220px" placeholder="كلمة جديدة" id="pw_${u.username}"/>
+            <button class="secondary" data-user="${u.username}" data-act="pw">حفظ</button>
+          </div>
+        </td>
+        <td>
+          <button class="danger" data-user="${u.username}" data-act="del" ${u.username==="admin"?"disabled":""}>حذف</button>
+        </td>
+      `;
+      return tr;
+    }
+
+    async function refreshAll(){
+      try{
+        App.setStatus(statusEl, "تحديث...");
+        const users = await App.API.usersList();
+        tb.innerHTML = "";
+        users.users.forEach(u=> tb.appendChild(rowUser(u)));
+
+        const st = await App.API.stats();
+        stTotal.textContent = st.stats.called_total ?? 0;
+        stM.textContent = st.stats.called_male ?? 0;
+        stF.textContent = st.stats.called_female ?? 0;
+
+        App.setStatus(statusEl, "جاهز ✅");
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    }
+
+    btnAdd.addEventListener("click", async ()=>{
+      try{
+        App.setStatus(statusEl, "إضافة...");
+        await App.API.userAdd(newUser.value.trim(), newPass.value, newRole.value);
+        newUser.value=""; newPass.value="";
+        App.setStatus(statusEl, "تمت الإضافة ✅");
+        refreshAll();
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    });
+
+    btnRefresh.addEventListener("click", refreshAll);
+
+    tb.addEventListener("click", async (ev)=>{
+      const btn = ev.target.closest("button");
+      if(!btn) return;
+      const act = btn.dataset.act;
+      const user = btn.dataset.user;
+      if(!act || !user) return;
+
+      try{
+        if(act==="pw"){
+          const val = document.getElementById("pw_"+user).value;
+          if(!val) return;
+          App.setStatus(statusEl, "حفظ كلمة المرور...");
+          await App.API.userPass(user, val);
+          App.setStatus(statusEl, "تم ✅");
+        }
+        if(act==="del"){
+          if(user==="admin") return;
+          if(!confirm("متأكد تحذف المستخدم؟")) return;
+          App.setStatus(statusEl, "حذف...");
+          await App.API.userDelete(user);
+          App.setStatus(statusEl, "تم ✅");
+          refreshAll();
+        }
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    });
+
+    btnResetStats.addEventListener("click", async ()=>{
+      if(!confirm("متأكد تصفير الإحصائيات؟")) return;
+      try{
+        App.setStatus(statusEl, "تصفير...");
+        await App.API.resetStats();
+        App.setStatus(statusEl, "تم ✅");
+        refreshAll();
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    });
+
+    btnAdminPw.addEventListener("click", async ()=>{
+      try{
+        if(!adminPw.value) return;
+        App.setStatus(statusEl, "تحديث كلمة مرور admin...");
+        await App.API.userPass("admin", adminPw.value);
+        adminPw.value="";
+        App.setStatus(statusEl, "تم ✅");
+      }catch(e){
+        App.setStatus(statusEl, "خطأ: " + e.message, false);
+      }
+    });
+
+    btnLogout.addEventListener("click", async ()=>{
+      try{ await App.API.logout(); }catch(e){}
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("role");
+      location.href = "login.html";
+    });
+
+    guard();
+    refreshAll();
+    setInterval(refreshAll, 4000);
+  </script>
+
+<script src="app.js"></script>
+</body>
+</html>
