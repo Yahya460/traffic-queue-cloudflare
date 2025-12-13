@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>شاشة الموظف - نظام الدور</title>
+  <title>شاشة الفاحص - نظام الدور</title>
   <style>
 :root{
   --bg:#0b1220;
@@ -13,6 +13,7 @@
   --accent:#34d399;
   --danger:#ef4444;
   --line:rgba(255,255,255,.08);
+  --yellow:#fbbf24;
 }
 *{box-sizing:border-box}
 body{
@@ -21,9 +22,11 @@ body{
   background:linear-gradient(180deg,#070b13 0%, #0b1220 35%, #0a1020 100%);
   color:var(--text);
 }
+a{color:var(--accent)}
 .container{max-width:980px;margin:0 auto;padding:18px}
 .header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
-.brand{display:flex;gap:10px;align-items:center}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);object-fit:contain;padding:6px}
 .badge{font-size:12px;color:#052e1a;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);padding:4px 10px;border-radius:999px}
 .card{
   background:rgba(15,26,43,.92);
@@ -35,10 +38,7 @@ body{
 .grid{display:grid;gap:14px}
 .grid2{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
-input,select,textarea,button{
-  font-family:inherit;
-  font-size:16px;
-}
+input,select,textarea,button{font-family:inherit;font-size:16px}
 input,select,textarea{
   width:100%;
   padding:12px 12px;
@@ -56,20 +56,21 @@ button{
   background:rgba(52,211,153,.18);
   color:var(--text);
   cursor:pointer;
-  font-weight:700;
+  font-weight:800;
 }
 button:hover{filter:brightness(1.08)}
 button.secondary{background:rgba(255,255,255,.06)}
 button.danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.28)}
+button.yellow{background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.28)}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.kpi{display:flex;gap:12px;align-items:baseline}
+.kpi{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .kpi .num{font-size:42px;font-weight:900;letter-spacing:1px}
 .kpi .lbl{color:var(--muted)}
 .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
 .table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none !important}
 
@@ -80,21 +81,22 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   <div class="container">
     <div class="header">
       <div class="brand">
+        <img class="logo" src="logo.png" alt="شعار معهد السلامة المرورية"/>
         <div>
-          <div style="font-weight:1000;font-size:22px">شاشة الموظف</div>
-          <div class="small">نداء رقم + ملاحظة عامة</div>
+          <div style="font-weight:1000;font-size:22px">شاشة الفاحص</div>
+          <div class="small">نداء رقم + رسالة للمدير</div>
         </div>
       </div>
       <div class="row">
         <span class="pill" id="who">-</span>
         <span class="pill" id="status">جاهز</span>
-        <a class="pill" href="display.html" style="color:var(--accent);text-decoration:none">شاشة العرض</a>
+        <a class="pill" href="display.html" style="text-decoration:none">شاشة العرض</a>
       </div>
     </div>
 
     <div class="grid grid2">
       <div class="card">
-        <div style="font-weight:900;margin-bottom:10px">نداء رقم جديد</div>
+        <div style="font-weight:1000;margin-bottom:10px">نداء تلميذ</div>
         <div class="grid">
           <div>
             <label class="small">رقم التلميذ</label>
@@ -114,7 +116,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
           </div>
 
           <div class="row">
-            <button class="secondary" id="btnPrev">العميل السابق</button>
+            <button class="secondary" id="btnPrev">التلميذ السابق</button>
             <button class="secondary" id="btnLogout">خروج</button>
           </div>
           <div class="small">الدور محفوظ بشكل دائم (حتى لو صار Restart).</div>
@@ -122,15 +124,22 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       </div>
 
       <div class="card">
-        <div style="font-weight:900;margin-bottom:10px">ملاحظة عامة (تظهر في شاشة العرض)</div>
+        <div style="font-weight:1000;margin-bottom:10px">رسالة للمدير</div>
         <div class="grid">
-          <textarea id="note" placeholder="اكتب الملاحظة هنا..."></textarea>
-          <button id="btnNote">إرسال الملاحظة</button>
-          <div class="small">تظهر باسم الموظف الذي أرسلها.</div>
+          <textarea id="msgToAdmin" placeholder="اكتب رسالة للمدير..."></textarea>
+          <button id="btnToAdmin">إرسال للمدير</button>
+          <div class="small">هذه الرسالة تظهر في لوحة المدير مع اسم الفاحص.</div>
         </div>
 
         <hr/>
-        <div style="font-weight:900;margin-bottom:8px">الحالة الحالية</div>
+        <div style="font-weight:1000;margin-bottom:8px">رسالة من المدير (تلقائي)</div>
+        <div class="card" style="background:rgba(255,255,255,.03);border-radius:14px">
+          <div class="small">آخر رسالة: <span id="fromAdminAt">-</span></div>
+          <div id="fromAdminText" style="margin-top:6px;font-weight:900">لا توجد رسالة.</div>
+        </div>
+
+        <hr/>
+        <div style="font-weight:1000;margin-bottom:8px">الحالة الحالية</div>
         <div class="kpi">
           <div class="lbl">الرقم الحالي</div>
           <div class="num" id="curNum">—</div>
@@ -146,13 +155,19 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   <script>
     const who = document.getElementById("who");
     const statusEl = document.getElementById("status");
+
     const num = document.getElementById("num");
     const gender = document.getElementById("gender");
     const btnNext = document.getElementById("btnNext");
     const btnPrev = document.getElementById("btnPrev");
-    const btnNote = document.getElementById("btnNote");
-    const note = document.getElementById("note");
     const btnLogout = document.getElementById("btnLogout");
+
+    const msgToAdmin = document.getElementById("msgToAdmin");
+    const btnToAdmin = document.getElementById("btnToAdmin");
+
+    const fromAdminText = document.getElementById("fromAdminText");
+    const fromAdminAt = document.getElementById("fromAdminAt");
+
     const curNum = document.getElementById("curNum");
     const curGender = document.getElementById("curGender");
     const updatedAt = document.getElementById("updatedAt");
@@ -169,9 +184,18 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       try{
         const r = await App.API.state();
         const s = r.state;
+
         curNum.textContent = s.current ? s.current.number : "—";
         curGender.textContent = s.current ? (s.current.gender === "female" ? "نساء" : "رجال") : "—";
         updatedAt.textContent = App.fmtTime(s.updatedAt);
+
+        if(s.adminToStaff && (s.adminToStaff.text||"").trim()){
+          fromAdminText.textContent = s.adminToStaff.text;
+          fromAdminAt.textContent = App.fmtTime(s.adminToStaff.at);
+        }else{
+          fromAdminText.textContent = "لا توجد رسالة.";
+          fromAdminAt.textContent = "-";
+        }
       }catch(e){}
     }
 
@@ -198,11 +222,12 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       }
     });
 
-    btnNote.addEventListener("click", async ()=>{
+    btnToAdmin.addEventListener("click", async ()=>{
       try{
-        App.setStatus(statusEl, "جاري إرسال الملاحظة...");
-        await App.API.note(note.value);
-        App.setStatus(statusEl, "تم إرسال الملاحظة ✅");
+        App.setStatus(statusEl, "إرسال...");
+        await App.API.toAdmin(msgToAdmin.value);
+        msgToAdmin.value = "";
+        App.setStatus(statusEl, "تم إرسال الرسالة ✅");
         refresh();
       }catch(e){
         App.setStatus(statusEl, "خطأ: " + e.message, false);
@@ -219,7 +244,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
     guard();
     refresh();
-    setInterval(refresh, 2000);
+    setInterval(refresh, 1500);
   </script>
 
 <script src="app.js"></script>

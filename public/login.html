@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>تسجيل الدخول - نظام الدور</title>
+  <title>خاص بتسجيل دخول الفاحص/المدير</title>
   <style>
 :root{
   --bg:#0b1220;
@@ -13,6 +13,7 @@
   --accent:#34d399;
   --danger:#ef4444;
   --line:rgba(255,255,255,.08);
+  --yellow:#fbbf24;
 }
 *{box-sizing:border-box}
 body{
@@ -21,9 +22,11 @@ body{
   background:linear-gradient(180deg,#070b13 0%, #0b1220 35%, #0a1020 100%);
   color:var(--text);
 }
+a{color:var(--accent)}
 .container{max-width:980px;margin:0 auto;padding:18px}
 .header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
-.brand{display:flex;gap:10px;align-items:center}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);object-fit:contain;padding:6px}
 .badge{font-size:12px;color:#052e1a;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);padding:4px 10px;border-radius:999px}
 .card{
   background:rgba(15,26,43,.92);
@@ -35,10 +38,7 @@ body{
 .grid{display:grid;gap:14px}
 .grid2{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
-input,select,textarea,button{
-  font-family:inherit;
-  font-size:16px;
-}
+input,select,textarea,button{font-family:inherit;font-size:16px}
 input,select,textarea{
   width:100%;
   padding:12px 12px;
@@ -56,20 +56,21 @@ button{
   background:rgba(52,211,153,.18);
   color:var(--text);
   cursor:pointer;
-  font-weight:700;
+  font-weight:800;
 }
 button:hover{filter:brightness(1.08)}
 button.secondary{background:rgba(255,255,255,.06)}
 button.danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.28)}
+button.yellow{background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.28)}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.kpi{display:flex;gap:12px;align-items:baseline}
+.kpi{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .kpi .num{font-size:42px;font-weight:900;letter-spacing:1px}
 .kpi .lbl{color:var(--muted)}
 .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
 .table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none !important}
 
@@ -80,9 +81,10 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   <div class="container">
     <div class="header">
       <div class="brand">
+        <img class="logo" src="logo.png" alt="شعار معهد السلامة المرورية"/>
         <div>
-          <div style="font-weight:900;font-size:20px">نظام الدور الآلي</div>
-          <div class="small">تسجيل الدخول (مدير / موظف)</div>
+          <div style="font-weight:1000;font-size:18px">خاص بتسجيل دخول الفاحص / المدير</div>
+          <div class="small">نظام الدور الآلي لمعلمين السياقة – معهد السلامة المرورية صحار</div>
         </div>
       </div>
       <span class="badge">Cloudflare Pages + Durable Object</span>
@@ -96,7 +98,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         <div class="grid grid2">
           <div>
             <label class="small">اسم المستخدم</label>
-            <input id="u" placeholder="مثال: admin أو اسم الموظف" autocomplete="username"/>
+            <input id="u" placeholder="مثال: admin أو اسم الفاحص" autocomplete="username"/>
           </div>
           <div>
             <label class="small">كلمة المرور</label>
@@ -110,9 +112,9 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
           <div>حساب المدير الافتراضي (أول مرة فقط): <b>admin / admin1234</b> — بعدها غيّر كلمة المرور.</div>
           <div>روابط الصفحات:</div>
           <ul>
-            <li><a href="display.html" style="color:var(--accent)">شاشة العرض</a></li>
-            <li><a href="staff.html" style="color:var(--accent)">شاشة الموظف</a></li>
-            <li><a href="admin.html" style="color:var(--accent)">لوحة المدير</a></li>
+            <li><a href="display.html">شاشة عرض الدور الآلي</a></li>
+            <li><a href="staff.html">شاشة الفاحص</a></li>
+            <li><a href="admin.html">لوحة المدير</a></li>
           </ul>
         </div>
       </div>

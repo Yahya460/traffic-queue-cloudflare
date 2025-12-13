@@ -66,9 +66,10 @@ export class QueueDO extends DurableObject {
       const initState = {
         current: null,
         previous: [],
-        note: "",
-        noteBy: "",
         updatedAt: nowIso(),
+        staffToAdmin: { text: "", by: "", at: "" },
+        adminToStaff: { text: "", by: "admin", at: "" },
+        displayMessage: { text: "", by: "admin", at: "", active: false }
       };
       this.sql.exec("INSERT INTO kv(k,v) VALUES(?,?)", "state", JSON.stringify(initState));
     }
@@ -222,23 +223,92 @@ export class QueueDO extends DurableObject {
       return json({ ok: true, state });
     }
 
-    if (path === "/api/note" && request.method === "POST") {
-      const auth = this.requireRole(request, ["admin", "staff"]);
+    if (path === "/api/message/to-admin" && request.method === "POST") {
+      const auth = this.requireRole(request, ["staff"]);
       if (!auth.ok) return auth.res;
 
       const body = await readJson(request);
-      const note = String(body.note || "").trim();
+      const text = String(body.text || "").trim();
 
       const state = this.getState();
-      state.note = note;
-      state.noteBy = auth.ses.username;
+      state.staffToAdmin = { text, by: auth.ses.username, at: nowIso() };
       state.updatedAt = nowIso();
       this.setState(state);
 
-      return json({ ok: true, state });
+      return json({ ok: true });
     }
 
-    // Admin only
+    if (path === "/api/message/to-staff" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const body = await readJson(request);
+      const text = String(body.text || "").trim();
+
+      const state = this.getState();
+      state.adminToStaff = { text, by: auth.ses.username, at: nowIso() };
+      state.updatedAt = nowIso();
+      this.setState(state);
+
+      return json({ ok: true });
+    }
+
+    // Backward compatibility: /api/note acts like staff->admin
+    if (path === "/api/note" && request.method === "POST") {
+      const auth = this.requireRole(request, ["staff"]);
+      if (!auth.ok) return auth.res;
+
+      const body = await readJson(request);
+      const text = String(body.note || "").trim();
+
+      const state = this.getState();
+      state.staffToAdmin = { text, by: auth.ses.username, at: nowIso() };
+      state.updatedAt = nowIso();
+      this.setState(state);
+
+      return json({ ok: true });
+    }
+
+    if (path === "/api/display-message" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const body = await readJson(request);
+      const text = String(body.text || "").trim();
+      const active = body.active === false ? false : true;
+
+      const state = this.getState();
+      state.displayMessage = { text, by: auth.ses.username, at: nowIso(), active: active && !!text };
+      state.updatedAt = nowIso();
+      this.setState(state);
+
+      return json({ ok: true });
+    }
+
+    if (path === "/api/display-message/clear" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const state = this.getState();
+      state.displayMessage.active = false;
+      state.updatedAt = nowIso();
+      this.setState(state);
+      return json({ ok: true });
+    }
+
+    if (path === "/api/queue/reset" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const state = this.getState();
+      state.current = null;
+      state.previous = [];
+      state.displayMessage = { text: "", by: auth.ses.username, at: nowIso(), active: false };
+      state.updatedAt = nowIso();
+      this.setState(state);
+      return json({ ok: true });
+    }
+
     if (path === "/api/stats" && request.method === "GET") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
@@ -322,6 +392,6 @@ export class QueueDO extends DurableObject {
 
 export default {
   async fetch() {
-    return new Response("traffic-queue-do OK");
+    return new Response("traffic-queue-do v2 OK");
   }
 };

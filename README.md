@@ -1,56 +1,16 @@
-# نظام الدور الآلي (مجاني + دائم) — Cloudflare Pages + Durable Object (SQLite)
+# تحديث v2 (تصميم جديد + رسائل + تحكم شاشة العرض)
 
-هذا مجلد جاهز بدل Render Free:
-- ما فيه نوم 15 دقيقة.
-- ما فيه ضياع users.json.
-- التخزين دائم داخل Durable Object (SQLite).
+## التغييرات
+- شريط ملاحظة أصفر متحرك من اليسار لليمين في شاشة العرض.
+- العمود الأوسط يعرض آخر 15 رقم مع وقت النداء (ساعة:دقيقة) داخل كل مربع.
+- المدير يقدر يفعل "رسالة عرض" تخفي أرقام العمود الأوسط فقط وتعرض رسالة المدير.
+- رسائل خاصة:
+  - الموظف → المدير (تظهر في لوحة المدير مع اسم الموظف)
+  - المدير → الموظفين (تظهر في شاشة الموظف تلقائيًا)
+- زر تصفير الدور الآلي في لوحة المدير.
+- نغمة واحدة (Beep) عند تغيير الرقم الحالي في شاشة العرض بدون ملفات صوت.
+- الشعار يظهر في جميع الشاشات (ملف: public/logo.png) — استبدله بشعار المعهد الحقيقي إذا عندك.
 
-## ماذا يحتوي؟
-- `public/` صفحات جاهزة: login / staff / admin / display
-- `functions/api/[[path]].js` تمرير كل `/api/*` إلى Durable Object
-- `do-worker/` Worker فيه Durable Object + SQLite
-
----
-
-## 1) نشر Durable Object (مرة واحدة)
-افتح Terminal داخل `do-worker`:
-
-```bash
-npm i -g wrangler
-wrangler login
-wrangler deploy
-```
-
----
-
-## 2) نشر الواجهة على Cloudflare Pages
-1) ارفع هذا المجلد كامل إلى GitHub
-2) Cloudflare Dashboard → Workers & Pages → Pages → Create project → اربط GitHub
-3) Build settings:
-   - Framework: None
-   - Build command: (فارغ)
-   - Output directory: `public`
-
----
-
-## 3) ربط Durable Object داخل Pages (Binding)
-داخل مشروع Pages:
-- Settings → Bindings → Add binding → Durable Object
-- Variable name: `QUEUE`
-- Class: `QueueDO`
-- Script: اختر `traffic-queue-do` (اللي نشرته في الخطوة 1)
-
-ثم Redeploy.
-
----
-
-## بيانات الدخول
-أول مرة:
-- admin / admin1234
-
-بعد الدخول:
-- افتح `admin.html` وغيّر كلمة مرور admin فورًا.
-
----
-
-جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
+## بعد التحديث
+1) ارفع الملفات إلى GitHub (استبدال الملفات القديمة)
+2) Cloudflare Pages → Deployments → Retry deployment

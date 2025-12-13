@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>شاشة العرض - نظام الدور</title>
+  <title>شاشة عرض الدور الآلي</title>
   <style>
 :root{
   --bg:#0b1220;
@@ -13,6 +13,7 @@
   --accent:#34d399;
   --danger:#ef4444;
   --line:rgba(255,255,255,.08);
+  --yellow:#fbbf24;
 }
 *{box-sizing:border-box}
 body{
@@ -21,9 +22,11 @@ body{
   background:linear-gradient(180deg,#070b13 0%, #0b1220 35%, #0a1020 100%);
   color:var(--text);
 }
+a{color:var(--accent)}
 .container{max-width:980px;margin:0 auto;padding:18px}
 .header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
-.brand{display:flex;gap:10px;align-items:center}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);object-fit:contain;padding:6px}
 .badge{font-size:12px;color:#052e1a;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);padding:4px 10px;border-radius:999px}
 .card{
   background:rgba(15,26,43,.92);
@@ -35,10 +38,7 @@ body{
 .grid{display:grid;gap:14px}
 .grid2{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
-input,select,textarea,button{
-  font-family:inherit;
-  font-size:16px;
-}
+input,select,textarea,button{font-family:inherit;font-size:16px}
 input,select,textarea{
   width:100%;
   padding:12px 12px;
@@ -56,32 +56,68 @@ button{
   background:rgba(52,211,153,.18);
   color:var(--text);
   cursor:pointer;
-  font-weight:700;
+  font-weight:800;
 }
 button:hover{filter:brightness(1.08)}
 button.secondary{background:rgba(255,255,255,.06)}
 button.danger{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.28)}
+button.yellow{background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.28)}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.kpi{display:flex;gap:12px;align-items:baseline}
+.kpi{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .kpi .num{font-size:42px;font-weight:900;letter-spacing:1px}
 .kpi .lbl{color:var(--muted)}
 .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
 .table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none !important}
 
-.screen{max-width:1200px;margin:0 auto;padding:16px}
-.big{font-size:92px;font-weight:1000;text-align:center;line-height:1.05}
-@media (max-width:700px){.big{font-size:64px}}
+.screen{max-width:1280px;margin:0 auto;padding:16px}
 .cols{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px}
-@media (max-width:1000px){.cols{grid-template-columns:1fr}}
-.colTitle{font-weight:900;margin-bottom:8px}
+@media (max-width:1050px){.cols{grid-template-columns:1fr}}
+.colTitle{font-weight:1000;margin-bottom:8px}
 .list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.box{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:14px;padding:10px;text-align:center;font-weight:900}
-.note{border:1px dashed rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+.box{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  border-radius:14px;
+  padding:10px;
+  text-align:center;
+  font-weight:1000;
+}
+.box small{display:block;margin-top:6px;color:var(--muted);font-weight:700;font-size:12px}
+.noteBar{
+  border:1px solid rgba(251,191,36,.35);
+  background:rgba(251,191,36,.10);
+  border-radius:16px;
+  overflow:hidden;
+  padding:8px 0;
+}
+.marqueeWrap{
+  direction:ltr;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.marquee{
+  display:inline-block;
+  padding-left:100%;
+  animation: scroll-ltr 16s linear infinite;
+  font-weight:1000;
+  color:#111827;
+}
+@keyframes scroll-ltr{
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+.announce{
+  border:1px dashed rgba(251,191,36,.35);
+  background:rgba(251,191,36,.12);
+}
+.announceText{font-size:26px;font-weight:1000;line-height:1.5;color:var(--text)}
+.bigNum{font-size:88px;font-weight:1100;letter-spacing:1px}
+@media (max-width:700px){.bigNum{font-size:62px}}
 
   </style>
 </head>
@@ -90,8 +126,9 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   <div class="screen">
     <div class="header">
       <div class="brand">
+        <img class="logo" src="logo.png" alt="شعار معهد السلامة المرورية"/>
         <div>
-          <div style="font-weight:1000;font-size:22px">شاشة العرض</div>
+          <div style="font-weight:1100;font-size:20px">شاشة عرض الدور الآلي لمعلمين السياقة بمعهد السلامة المرورية - صحار</div>
           <div class="small">تحديث تلقائي كل 1.5 ثانية</div>
         </div>
       </div>
@@ -101,21 +138,16 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
     <div class="card">
       <div class="kpi">
         <div class="lbl">الرقم الحالي</div>
-        <div class="num" id="curNum">—</div>
+        <div class="bigNum" id="curNum">—</div>
         <div class="pill" id="curGender">—</div>
       </div>
       <div class="small">آخر تحديث: <span id="updatedAt">-</span></div>
     </div>
 
-    <div class="card note" style="margin-top:14px">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div style="font-weight:900">ملاحظة عامة</div>
-          <div class="small">آخر ملاحظة من: <b id="noteBy">-</b></div>
-        </div>
-        <a href="login.html" style="color:var(--accent)">تسجيل الدخول</a>
+    <div class="noteBar" style="margin-top:12px">
+      <div class="marqueeWrap">
+        <div class="marquee" id="barText">—</div>
       </div>
-      <div style="margin-top:10px;font-size:18px" id="noteText">لا توجد ملاحظة.</div>
     </div>
 
     <div class="cols" style="margin-top:14px">
@@ -124,9 +156,17 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         <div class="list" id="menList"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="midCard">
         <div class="colTitle">آخر 15 رقم</div>
         <div class="list" id="allList"></div>
+
+        <div class="hidden" id="announceBox">
+          <div class="card announce" style="margin-top:10px">
+            <div class="colTitle">رسالة المدير</div>
+            <div class="small">وقت الإرسال: <span id="annAt">-</span></div>
+            <div class="announceText" id="annText">—</div>
+          </div>
+        </div>
       </div>
 
       <div class="card">
@@ -143,20 +183,31 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
     const curNum = document.getElementById("curNum");
     const curGender = document.getElementById("curGender");
     const updatedAt = document.getElementById("updatedAt");
-    const noteText = document.getElementById("noteText");
-    const noteBy = document.getElementById("noteBy");
+    const barText = document.getElementById("barText");
+
     const allList = document.getElementById("allList");
     const menList = document.getElementById("menList");
     const womenList = document.getElementById("womenList");
 
+    const announceBox = document.getElementById("announceBox");
+    const annText = document.getElementById("annText");
+    const annAt = document.getElementById("annAt");
+
+    let lastCur = null;
+
+    function boxForCall(it){
+      const d = document.createElement("div");
+      d.className = "box";
+      d.textContent = it?.number ?? it;
+      const sm = document.createElement("small");
+      sm.textContent = it?.at ? ("تم النداء " + App.fmtHHMM(it.at)) : "";
+      d.appendChild(sm);
+      return d;
+    }
+
     function fill(listEl, items){
       listEl.innerHTML = "";
-      (items || []).forEach(it=>{
-        const d = document.createElement("div");
-        d.className = "box";
-        d.textContent = it?.number ?? it;
-        listEl.appendChild(d);
-      });
+      (items || []).forEach(it=> listEl.appendChild(boxForCall(it)));
       if(!(items||[]).length){
         const d = document.createElement("div");
         d.className = "small";
@@ -171,16 +222,34 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         const s = r.state;
         App.setStatus(statusEl, "متصل ✅", true);
 
+        const cur = s.current ? s.current.number : null;
+        if(cur && lastCur && cur !== lastCur){
+          App.beep();
+        }
+        if(cur) lastCur = cur;
+
         curNum.textContent = s.current ? s.current.number : "—";
         curGender.textContent = s.current ? (s.current.gender === "female" ? "نساء" : "رجال") : "—";
         updatedAt.textContent = App.fmtTime(s.updatedAt);
 
-        noteText.textContent = s.note ? s.note : "لا توجد ملاحظة.";
-        noteBy.textContent = s.noteBy || "-";
+        const bar = (s.displayMessage && s.displayMessage.text) ? s.displayMessage.text : "يرجى متابعة شاشة الدور الآلي...";
+        barText.textContent = bar;
 
-        fill(allList, (s.previous || []).map(x=>x));
+        const active = !!(s.displayMessage && s.displayMessage.active && (s.displayMessage.text||"").trim());
+        if(active){
+          allList.classList.add("hidden");
+          announceBox.classList.remove("hidden");
+          annText.textContent = s.displayMessage.text;
+          annAt.textContent = App.fmtTime(s.displayMessage.at);
+        }else{
+          announceBox.classList.add("hidden");
+          allList.classList.remove("hidden");
+          fill(allList, (s.previous || []).map(x=>x));
+        }
+
         fill(menList, (s.previous || []).filter(x=>x.gender!=="female"));
         fill(womenList, (s.previous || []).filter(x=>x.gender==="female"));
+
       }catch(e){
         App.setStatus(statusEl, "غير متصل: " + e.message, false);
       }
