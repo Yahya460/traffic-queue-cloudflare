@@ -6,23 +6,17 @@ function json(data, status = 200) {
     headers: { "content-type": "application/json; charset=utf-8" },
   });
 }
-
 async function readJson(request) {
   const ct = request.headers.get("content-type") || "";
   if (ct.includes("application/json")) return await request.json();
   return {};
 }
-
-function nowIso() {
-  return new Date().toISOString();
-}
-
+function nowIso() { return new Date().toISOString(); }
 function makeToken() {
   const a = new Uint8Array(24);
   crypto.getRandomValues(a);
   return [...a].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-
 async function sha256(text) {
   const enc = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest("SHA-256", enc);
@@ -35,30 +29,9 @@ export class QueueDO extends DurableObject {
     this.sql = ctx.storage.sql;
 
     this.sql.exec(`
-      CREATE TABLE IF NOT EXISTS users(
-        username TEXT PRIMARY KEY,
-        passhash TEXT NOT NULL,
-        role TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS sessions(
-        token TEXT PRIMARY KEY,
-        username TEXT NOT NULL,
-        role TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        expires_at TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS kv(
-        k TEXT PRIMARY KEY,
-        v TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS stats(
-        k TEXT PRIMARY KEY,
-        v INTEGER NOT NULL
-      );
+      CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, passhash TEXT NOT NULL, role TEXT NOT NULL, created_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, username TEXT NOT NULL, role TEXT NOT NULL, created_at TEXT NOT NULL, expires_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, v TEXT NOT NULL);
     `);
 
     const st = this.sql.exec("SELECT v FROM kv WHERE k='state'").toArray()[0];
@@ -67,20 +40,13 @@ export class QueueDO extends DurableObject {
         current: null,
         previous: [],
         updatedAt: nowIso(),
-
         staffToAdmin: { text: "", by: "", at: "" },
         adminToStaff: {},
-
-        displayMessage: { text: "", by: "admin", at: "", active: false }
+        displayMessage: { text: "", by: "admin", at: "", active: false },
+        tickerMessage: { text: "", by: "admin", at: "" },
+        displayPing: 0
       };
       this.sql.exec("INSERT INTO kv(k,v) VALUES(?,?)", "state", JSON.stringify(initState));
-    }
-
-    const s1 = this.sql.exec("SELECT v FROM stats WHERE k='called_total'").toArray()[0];
-    if (!s1) {
-      this.sql.exec("INSERT INTO stats(k,v) VALUES('called_total',0)");
-      this.sql.exec("INSERT INTO stats(k,v) VALUES('called_male',0)");
-      this.sql.exec("INSERT INTO stats(k,v) VALUES('called_female',0)");
     }
   }
 
@@ -88,45 +54,30 @@ export class QueueDO extends DurableObject {
     const admin = this.sql.exec("SELECT username FROM users WHERE username='admin'").toArray()[0];
     if (admin) return;
     const passhash = await sha256("admin1234");
-    this.sql.exec(
-      "INSERT INTO users(username, passhash, role, created_at) VALUES(?,?,?,?)",
-      "admin",
-      passhash,
-      "admin",
-      nowIso()
-    );
+    this.sql.exec("INSERT INTO users(username, passhash, role, created_at) VALUES(?,?,?,?)", "admin", passhash, "admin", nowIso());
   }
 
   getState() {
     const row = this.sql.exec("SELECT v FROM kv WHERE k='state'").one();
     return JSON.parse(row.v);
   }
-
-  setState(stateObj) {
-    this.sql.exec("UPDATE kv SET v=? WHERE k='state'", JSON.stringify(stateObj));
-  }
+  setState(s) { this.sql.exec("UPDATE kv SET v=? WHERE k='state'", JSON.stringify(s)); }
 
   getAuthToken(request) {
     const h = request.headers.get("authorization") || "";
     if (!h.toLowerCase().startsWith("bearer ")) return "";
     return h.slice(7).trim();
   }
-
   getSession(token) {
     if (!token) return null;
-    const row = this.sql.exec(
-      "SELECT token, username, role, expires_at FROM sessions WHERE token=?",
-      token
-    ).toArray()[0];
+    const row = this.sql.exec("SELECT token, username, role, expires_at FROM sessions WHERE token=?", token).toArray()[0];
     if (!row) return null;
-
     if (new Date(row.expires_at).getTime() < Date.now()) {
       this.sql.exec("DELETE FROM sessions WHERE token=?", token);
       return null;
     }
     return row;
   }
-
   requireRole(request, roles) {
     const token = this.getAuthToken(request);
     const ses = this.getSession(token);
@@ -135,17 +86,10 @@ export class QueueDO extends DurableObject {
     return { ok: true, ses };
   }
 
-  bumpStat(k, delta = 1) {
-    this.sql.exec("UPDATE stats SET v=v+? WHERE k=?", delta, k);
-  }
-
   async fetch(request) {
     await this.ensureAdminAsync();
-
     const url = new URL(request.url);
     const path = url.pathname;
-
-    if (path === "/api/health") return json({ ok: true });
 
     if (path === "/api/login" && request.method === "POST") {
       const body = await readJson(request);
@@ -153,10 +97,7 @@ export class QueueDO extends DurableObject {
       const password = String(body.password || "");
       if (!username || !password) return json({ ok: false, error: "MISSING_FIELDS" }, 400);
 
-      const row = this.sql.exec(
-        "SELECT username, passhash, role FROM users WHERE username=?",
-        username
-      ).toArray()[0];
+      const row = this.sql.exec("SELECT username, passhash, role FROM users WHERE username=?", username).toArray()[0];
       if (!row) return json({ ok: false, error: "INVALID_LOGIN" }, 401);
 
       const passhash = await sha256(password);
@@ -165,11 +106,7 @@ export class QueueDO extends DurableObject {
       const token = makeToken();
       const created_at = nowIso();
       const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
-      this.sql.exec(
-        "INSERT INTO sessions(token, username, role, created_at, expires_at) VALUES(?,?,?,?,?)",
-        token, row.username, row.role, created_at, expires_at
-      );
-
+      this.sql.exec("INSERT INTO sessions(token, username, role, created_at, expires_at) VALUES(?,?,?,?,?)", token, row.username, row.role, created_at, expires_at);
       return json({ ok: true, token, username: row.username, role: row.role });
     }
 
@@ -186,199 +123,135 @@ export class QueueDO extends DurableObject {
     if (path === "/api/next" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin", "staff"]);
       if (!auth.ok) return auth.res;
-
       const body = await readJson(request);
       const number = String(body.number || "").trim();
       const gender = body.gender === "female" ? "female" : "male";
       if (!number) return json({ ok: false, error: "MISSING_NUMBER" }, 400);
 
-      const state = this.getState();
-      const prev = Array.isArray(state.previous) ? state.previous : [];
-      if (state.current) prev.unshift(state.current);
-      state.previous = prev.slice(0, 15);
-
-      state.current = { number, gender, by: auth.ses.username, at: nowIso() };
-      state.updatedAt = nowIso();
-      this.setState(state);
-
-      this.bumpStat("called_total", 1);
-      this.bumpStat(gender === "female" ? "called_female" : "called_male", 1);
-
-      return json({ ok: true, state });
+      const s = this.getState();
+      const prev = Array.isArray(s.previous) ? s.previous : [];
+      if (s.current) prev.unshift(s.current);
+      s.previous = prev.slice(0, 15);
+      s.current = { number, gender, by: auth.ses.username, at: nowIso() };
+      s.updatedAt = nowIso();
+      this.setState(s);
+      return json({ ok: true });
     }
 
     if (path === "/api/prev" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin", "staff"]);
       if (!auth.ok) return auth.res;
-
-      const state = this.getState();
-      const prev = Array.isArray(state.previous) ? state.previous : [];
+      const s = this.getState();
+      const prev = Array.isArray(s.previous) ? s.previous : [];
       const back = prev.shift();
       if (!back) return json({ ok: false, error: "NO_PREVIOUS" }, 400);
-
-      if (state.current) prev.unshift(state.current);
-      state.current = back;
-      state.previous = prev.slice(0, 15);
-      state.updatedAt = nowIso();
-      this.setState(state);
-
-      return json({ ok: true, state });
-    }
-
-    // Staff -> Admin message
-    if (path === "/api/message/to-admin" && request.method === "POST") {
-      const auth = this.requireRole(request, ["staff"]);
-      if (!auth.ok) return auth.res;
-
-      const body = await readJson(request);
-      const text = String(body.text || "").trim();
-
-      const state = this.getState();
-      state.staffToAdmin = { text, by: auth.ses.username, at: nowIso() };
-      state.updatedAt = nowIso();
-      this.setState(state);
-
+      if (s.current) prev.unshift(s.current);
+      s.current = back;
+      s.previous = prev.slice(0, 15);
+      s.updatedAt = nowIso();
+      this.setState(s);
       return json({ ok: true });
     }
 
-    // Admin -> Staff targeted message
+    if (path === "/api/message/to-admin" && request.method === "POST") {
+      const auth = this.requireRole(request, ["staff"]);
+      if (!auth.ok) return auth.res;
+      const body = await readJson(request);
+      const text = String(body.text || "").trim();
+      const s = this.getState();
+      s.staffToAdmin = { text, by: auth.ses.username, at: nowIso() };
+      s.updatedAt = nowIso();
+      this.setState(s);
+      return json({ ok: true });
+    }
+
     if (path === "/api/message/to-staff" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
-
       const body = await readJson(request);
       const to = String(body.to || "").trim();
       const text = String(body.text || "").trim();
       if (!to) return json({ ok: false, error: "MISSING_TO" }, 400);
-
-      const state = this.getState();
-      if (!state.adminToStaff || typeof state.adminToStaff !== "object") state.adminToStaff = {};
-      state.adminToStaff[to] = { text, by: auth.ses.username, at: nowIso() };
-      state.updatedAt = nowIso();
-      this.setState(state);
-
+      const s = this.getState();
+      if (!s.adminToStaff || typeof s.adminToStaff !== "object") s.adminToStaff = {};
+      s.adminToStaff[to] = { text, by: auth.ses.username, at: nowIso() };
+      s.updatedAt = nowIso();
+      this.setState(s);
       return json({ ok: true });
     }
 
-    // Admin display-message
     if (path === "/api/display-message" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
-
       const body = await readJson(request);
       const text = String(body.text || "").trim();
       const active = body.active === false ? false : true;
-
-      const state = this.getState();
-      state.displayMessage = { text, by: auth.ses.username, at: nowIso(), active: active && !!text };
-      state.updatedAt = nowIso();
-      this.setState(state);
-
+      const s = this.getState();
+      s.displayMessage = { text, by: auth.ses.username, at: nowIso(), active: active && !!text };
+      s.updatedAt = nowIso();
+      this.setState(s);
       return json({ ok: true });
     }
 
     if (path === "/api/display-message/clear" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
-
-      const state = this.getState();
-      state.displayMessage.active = false;
-      state.updatedAt = nowIso();
-      this.setState(state);
+      const s = this.getState();
+      s.displayMessage.active = false;
+      s.updatedAt = nowIso();
+      this.setState(s);
       return json({ ok: true });
     }
 
-    // Admin queue reset
+    if (path === "/api/ticker" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+      const body = await readJson(request);
+      const text = String(body.text || "").trim();
+      const s = this.getState();
+      s.tickerMessage = { text, by: auth.ses.username, at: nowIso() };
+      s.updatedAt = nowIso();
+      this.setState(s);
+      return json({ ok: true });
+    }
+
+    if (path === "/api/ticker/clear" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+      const s = this.getState();
+      s.tickerMessage = { text: "", by: auth.ses.username, at: nowIso() };
+      s.updatedAt = nowIso();
+      this.setState(s);
+      return json({ ok: true });
+    }
+
+    if (path === "/api/display/ping" && request.method === "POST") {
+      const auth = this.requireRole(request, ["admin"]);
+      if (!auth.ok) return auth.res;
+      const s = this.getState();
+      s.displayPing = (s.displayPing || 0) + 1;
+      s.updatedAt = nowIso();
+      this.setState(s);
+      return json({ ok: true, ping: s.displayPing });
+    }
+
     if (path === "/api/queue/reset" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
-
-      const state = this.getState();
-      state.current = null;
-      state.previous = [];
-      state.displayMessage = { text: "", by: auth.ses.username, at: nowIso(), active: false };
-      state.updatedAt = nowIso();
-      this.setState(state);
+      const s = this.getState();
+      s.current = null;
+      s.previous = [];
+      s.displayMessage = { text: "", by: auth.ses.username, at: nowIso(), active: false };
+      s.updatedAt = nowIso();
+      this.setState(s);
       return json({ ok: true });
     }
 
-    // Admin stats
-    if (path === "/api/stats" && request.method === "GET") {
-      const auth = this.requireRole(request, ["admin"]);
-      if (!auth.ok) return auth.res;
-
-      const rows = this.sql.exec("SELECT k,v FROM stats").toArray();
-      const stats = {};
-      for (const r of rows) stats[r.k] = r.v;
-      return json({ ok: true, stats });
-    }
-
-    if (path === "/api/stats/reset" && request.method === "POST") {
-      const auth = this.requireRole(request, ["admin"]);
-      if (!auth.ok) return auth.res;
-
-      this.sql.exec("UPDATE stats SET v=0");
-      return json({ ok: true });
-    }
-
-    // Admin users
     if (path === "/api/users" && request.method === "GET") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
-
-      const rows = this.sql.exec(
-        "SELECT username, role, created_at FROM users ORDER BY created_at DESC"
-      ).toArray();
+      const rows = this.sql.exec("SELECT username, role, created_at FROM users ORDER BY created_at DESC").toArray();
       return json({ ok: true, users: rows });
-    }
-
-    if (path === "/api/users" && request.method === "POST") {
-      const auth = this.requireRole(request, ["admin"]);
-      if (!auth.ok) return auth.res;
-
-      const body = await readJson(request);
-      const username = String(body.username || "").trim();
-      const password = String(body.password || "");
-      const role = body.role === "admin" ? "admin" : "staff";
-      if (!username || !password) return json({ ok: false, error: "MISSING_FIELDS" }, 400);
-
-      const exists = this.sql.exec("SELECT username FROM users WHERE username=?", username).toArray()[0];
-      if (exists) return json({ ok: false, error: "USER_EXISTS" }, 409);
-
-      const passhash = await sha256(password);
-      this.sql.exec(
-        "INSERT INTO users(username, passhash, role, created_at) VALUES(?,?,?,?)",
-        username, passhash, role, nowIso()
-      );
-      return json({ ok: true });
-    }
-
-    if (path.startsWith("/api/users/") && path.endsWith("/password") && request.method === "POST") {
-      const auth = this.requireRole(request, ["admin"]);
-      if (!auth.ok) return auth.res;
-
-      const parts = path.split("/");
-      const username = decodeURIComponent(parts[3] || "");
-      const body = await readJson(request);
-      const password = String(body.password || "");
-      if (!username || !password) return json({ ok: false, error: "MISSING_FIELDS" }, 400);
-
-      const passhash = await sha256(password);
-      this.sql.exec("UPDATE users SET passhash=? WHERE username=?", passhash, username);
-      return json({ ok: true });
-    }
-
-    if (path.startsWith("/api/users/") && request.method === "DELETE") {
-      const auth = this.requireRole(request, ["admin"]);
-      if (!auth.ok) return auth.res;
-
-      const parts = path.split("/");
-      const username = decodeURIComponent(parts[3] || "");
-      if (!username) return json({ ok: false, error: "MISSING_USERNAME" }, 400);
-      if (username === "admin") return json({ ok: false, error: "CANNOT_DELETE_ADMIN" }, 400);
-
-      this.sql.exec("DELETE FROM users WHERE username=?", username);
-      return json({ ok: true });
     }
 
     return json({ ok: false, error: "NOT_FOUND" }, 404);
@@ -387,6 +260,6 @@ export class QueueDO extends DurableObject {
 
 export default {
   async fetch() {
-    return new Response("traffic-queue-do v3 OK");
+    return new Response("traffic-queue-do v4-ar2 OK");
   }
 };

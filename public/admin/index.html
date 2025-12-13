@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>لوحة المدير</title>
+  <title>Admin</title>
   <style>
 :root{
   --bg:#ffffff;
@@ -24,59 +24,22 @@
   --radius:18px;
 }
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:var(--bg);
-  color:var(--text);
-}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
 a{color:var(--blue)}
 .container{max-width:1020px;margin:0 auto;padding:18px}
-.header{
-  display:flex;gap:14px;align-items:center;justify-content:space-between;
-  margin-bottom:14px;
-}
+.header{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .brand{display:flex;gap:12px;align-items:center}
-.logo{
-  width:56px;height:56px;border-radius:16px;
-  border:1px solid var(--line);
-  background:rgba(2,6,23,.02);
-  object-fit:contain;padding:6px;
-}
+.logo{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);background:rgba(2,6,23,.02);object-fit:contain;padding:6px;}
 .title{font-weight:1100;font-size:20px;color:var(--black)}
 .subtitle{font-size:13px;color:var(--muted);line-height:1.5}
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:16px;
-  backdrop-filter:saturate(140%) blur(2px);
-}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;backdrop-filter:saturate(140%) blur(2px);}
 .grid{display:grid;gap:14px}
 .grid2{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 input,select,textarea,button{font-family:inherit;font-size:16px}
-input,select,textarea{
-  width:100%;
-  padding:12px 12px;
-  border-radius:16px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.8);
-  color:var(--black);
-  outline:none;
-}
+input,select,textarea{width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--black);outline:none;}
 textarea{resize:vertical;min-height:110px}
-button{
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid var(--line);
-  background:var(--blueBg);
-  color:var(--black);
-  cursor:pointer;
-  font-weight:1000;
-  display:inline-flex;align-items:center;gap:10px;justify-content:center;
-}
+button{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--blueBg);color:var(--black);cursor:pointer;font-weight:1100;display:inline-flex;align-items:center;gap:10px;justify-content:center;}
 button:hover{filter:brightness(.98)}
 button.blue{background:var(--blueBg);border-color:rgba(37,99,235,.22)}
 button.red{background:var(--redBg);border-color:rgba(220,38,38,.22)}
@@ -85,22 +48,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.pill{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:6px 10px;border-radius:999px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.65);
-  font-size:12px;color:var(--muted);
-}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.65);font-size:12px;color:var(--muted);}
 .kpi{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
-.kpi .num{font-size:44px;font-weight:1100;letter-spacing:.5px}
-.kpi .lbl{color:var(--muted)}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none !important}
-
-/* Icons */
 .ico{width:18px;height:18px;display:inline-block}
 .ico.blue{color:var(--blue);opacity:.92}
 .ico.red{color:var(--red);opacity:.92}
@@ -110,154 +61,74 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 </head>
 <body>
 <div class="container">
-    <div class="header">
-      <div class="brand">
-        <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
-        <div>
-          <div class="title">لوحة المدير</div>
-          <div class="subtitle">رسائل + تحكم شاشة العرض + إدارة مستخدمين + إحصائيات</div>
-        </div>
-      </div>
-      <div class="row">
-        <span class="pill" id="who">-</span>
-        <span class="pill" id="status">جاهز</span>
-        <a class="pill" href="/display" style="text-decoration:none">شاشة العرض</a>
+  <div class="header">
+    <div class="brand">
+      <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
+      <div>
+        <div class="title">لوحة المدير</div>
+        <div class="subtitle">التحكم في شاشة العرض + رسائل</div>
       </div>
     </div>
-
-    <div class="grid grid2">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div style="font-weight:1100">إرسال ملاحظة لموظف محدد</div>
-          <span id="icoSend"></span>
-        </div>
-        <div class="grid">
-          <div class="grid grid2">
-            <div>
-              <label class="small">اختر الموظف</label>
-              <select id="staffSelect"></select>
-            </div>
-            <div>
-              <label class="small">حالة</label>
-              <div class="pill" id="msgState">-</div>
-            </div>
-          </div>
-          <textarea id="msgToStaff" placeholder="اكتب رسالة للموظف المحدد..."></textarea>
-          <button class="blue" id="btnToStaff"><span id="icoSend2"></span>إرسال</button>
-
-          <hr/>
-          <div style="font-weight:1100;margin-bottom:8px">آخر رسالة من موظف (تلقائي)</div>
-          <div class="card" style="background:rgba(255,255,255,.65);box-shadow:none">
-            <div class="small">من: <b id="staffMsgBy">-</b> — <span id="staffMsgAt">-</span></div>
-            <div id="staffMsgText" style="margin-top:6px;font-weight:1100">لا توجد رسالة.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div style="font-weight:1100">التحكم في شاشة العرض (العمود الأوسط)</div>
-          <span id="icoDisplay"></span>
-        </div>
-        <div class="grid">
-          <textarea id="dispMsg" placeholder="رسالة المدير التي ستظهر في العمود الأوسط..."></textarea>
-          <div class="row">
-            <button class="red" id="btnDispOn"><span id="icoBell"></span>عرض الرسالة (إخفاء الأرقام)</button>
-            <button class="black" id="btnDispOff">إلغاء العرض</button>
-          </div>
-          <div class="small">التحديث مباشر، وتظهر الرسالة فورًا في شاشة العرض.</div>
-
-          <hr/>
-          <div class="row">
-            <button class="red" id="btnResetQueue"><span id="icoReset"></span>تصفير الدور الآلي</button>
-            <button class="black" id="btnLogout">خروج</button>
-          </div>
-        </div>
-      </div>
+    <div class="row">
+      <span class="pill" id="who">-</span>
+      <span class="pill" id="status">جاهز</span>
+      <a class="pill" href="/العرض" style="text-decoration:none">شاشة العرض</a>
+      <button class="black" id="btnLogout"><span id="icoLogout"></span>تسجيل الخروج</button>
     </div>
-
-    <div class="grid grid2" style="margin-top:14px">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div style="font-weight:1100">إضافة مستخدم</div>
-          <span id="icoUsers"></span>
-        </div>
-        <div class="grid">
-          <div class="grid grid2">
-            <div>
-              <label class="small">اسم المستخدم</label>
-              <input id="newUser" placeholder="مثال: يوسف"/>
-            </div>
-            <div>
-              <label class="small">كلمة المرور</label>
-              <input id="newPass" type="password" placeholder="••••••••"/>
-            </div>
-          </div>
-          <div class="grid grid2">
-            <div>
-              <label class="small">الدور</label>
-              <select id="newRole">
-                <option value="staff">فاحص</option>
-                <option value="admin">مدير</option>
-              </select>
-            </div>
-            <div style="display:flex;align-items:end">
-              <button class="blue" id="btnAdd">إضافة</button>
-            </div>
-          </div>
-          <div class="small">⚠️ ملاحظة: لا تحذف admin.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="font-weight:1100;margin-bottom:10px">الإحصائيات</div>
-        <div class="kpi">
-          <div class="lbl">إجمالي النداءات</div>
-          <div class="num" id="stTotal">0</div>
-        </div>
-        <div class="row">
-          <span class="pill">رجال: <b id="stM">0</b></span>
-          <span class="pill">نساء: <b id="stF">0</b></span>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <button class="red" id="btnResetStats"><span id="icoReset2"></span>تصفير الإحصائيات</button>
-          <button class="black" id="btnRefresh">تحديث</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <div style="font-weight:1100;margin-bottom:10px">قائمة المستخدمين</div>
-      <div style="overflow:auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>اسم المستخدم</th>
-              <th>الدور</th>
-              <th>تغيير كلمة المرور</th>
-              <th>حذف</th>
-            </tr>
-          </thead>
-          <tbody id="tb"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <div style="font-weight:1100;margin-bottom:10px">تغيير كلمة مرور admin سريعًا</div>
-      <div class="grid grid2">
-        <div>
-          <label class="small">كلمة مرور جديدة لـ admin</label>
-          <input id="adminPw" type="password" placeholder="••••••••"/>
-        </div>
-        <div style="display:flex;align-items:end">
-          <button class="blue" id="btnAdminPw">حفظ</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
+
+  <div class="grid grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:1100">إرسال ملاحظة لموظف</div>
+        <span id="icoSend"></span>
+      </div>
+      <div class="grid">
+        <label class="small">اختر الموظف</label>
+        <select id="staffSelect"></select>
+        <textarea id="msgToStaff" placeholder="اكتب رسالة للموظف..."></textarea>
+        <button class="blue" id="btnToStaff"><span id="icoSend2"></span>إرسال</button>
+      </div>
+      <hr/>
+      <div style="font-weight:1100;margin-bottom:8px">آخر رسالة من موظف</div>
+      <div class="card" style="background:rgba(255,255,255,.65);box-shadow:none">
+        <div class="small">من: <b id="staffMsgBy">-</b> — <span id="staffMsgAt">-</span></div>
+        <div id="staffMsgText" style="margin-top:6px;font-weight:1100">لا توجد رسالة.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:1100">التحكم في شاشة العرض (العمود الأوسط)</div>
+        <span id="icoDisplay"></span>
+      </div>
+      <div class="grid">
+        <label class="small">رسالة العمود الأوسط (تخفي الأرقام)</label>
+        <textarea id="dispMsg" placeholder="اكتب رسالة المدير..."></textarea>
+        <div class="row">
+          <button class="red" id="btnDispOn"><span id="icoBell"></span>إرسال رسالة العمود الأوسط</button>
+          <button class="black" id="btnDispOff">إلغاء العرض</button>
+        </div>
+
+        <hr/>
+        <label class="small">شريط الملاحظة الأصفر (مستقل)</label>
+        <textarea id="tickerMsg" placeholder="اكتب ملاحظة الشريط..."></textarea>
+        <div class="row">
+          <button class="blue" id="btnTickerSend"><span id="icoSend3"></span>إرسال ملاحظة الشريط</button>
+          <button class="black" id="btnTickerClear">مسح ملاحظة الشريط</button>
+        </div>
+
+        <hr/>
+        <div class="row">
+          <button class="blue" id="btnPing"><span id="icoRefresh"></span>تحديث شاشة العرض الآن</button>
+          <button class="red" id="btnResetQueue"><span id="icoReset"></span>تصفير الدور الآلي</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+</div>
 
 <script>
   const I = {
@@ -271,25 +142,30 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><path d="M12 11a4 4 0 100-8 4 4 0 000 8z"></path></svg>`,
     display:(c="black")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path><path d="M12 16v4"></path></svg>`,
+    logout:(c="black")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
+      <path d="M16 17l5-5-5-5"></path>
+      <path d="M21 12H9"></path></svg>`,
+    refresh:(c="blue")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 12a9 9 0 11-3-6.7"></path><path d="M21 3v6h-6"></path></svg>`,
   };
 </script>
 
 <script>
   document.getElementById("icoSend").innerHTML = I.send("blue");
   document.getElementById("icoSend2").innerHTML = I.send("blue");
+  document.getElementById("icoSend3").innerHTML = I.send("blue");
   document.getElementById("icoDisplay").innerHTML = I.display("black");
   document.getElementById("icoBell").innerHTML = I.bell("red");
   document.getElementById("icoReset").innerHTML = I.reset("red");
-  document.getElementById("icoReset2").innerHTML = I.reset("red");
-  document.getElementById("icoUsers").innerHTML = I.users("black");
+  document.getElementById("icoLogout").innerHTML = I.logout("black");
+  document.getElementById("icoRefresh").innerHTML = I.refresh("blue");
 
   const who = document.getElementById("who");
   const statusEl = document.getElementById("status");
-
   const staffSelect = document.getElementById("staffSelect");
   const msgToStaff = document.getElementById("msgToStaff");
   const btnToStaff = document.getElementById("btnToStaff");
-  const msgState = document.getElementById("msgState");
 
   const staffMsgBy = document.getElementById("staffMsgBy");
   const staffMsgAt = document.getElementById("staffMsgAt");
@@ -299,57 +175,29 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   const btnDispOn = document.getElementById("btnDispOn");
   const btnDispOff = document.getElementById("btnDispOff");
 
+  const tickerMsg = document.getElementById("tickerMsg");
+  const btnTickerSend = document.getElementById("btnTickerSend");
+  const btnTickerClear = document.getElementById("btnTickerClear");
+
+  const btnPing = document.getElementById("btnPing");
   const btnResetQueue = document.getElementById("btnResetQueue");
   const btnLogout = document.getElementById("btnLogout");
-
-  const tb = document.getElementById("tb");
-  const newUser = document.getElementById("newUser");
-  const newPass = document.getElementById("newPass");
-  const newRole = document.getElementById("newRole");
-  const btnAdd = document.getElementById("btnAdd");
-  const btnRefresh = document.getElementById("btnRefresh");
-  const btnResetStats = document.getElementById("btnResetStats");
-  const stTotal = document.getElementById("stTotal");
-  const stM = document.getElementById("stM");
-  const stF = document.getElementById("stF");
-  const adminPw = document.getElementById("adminPw");
-  const btnAdminPw = document.getElementById("btnAdminPw");
 
   function guard(){
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
     const username = localStorage.getItem("username") || "-";
     who.textContent = username + " (admin)";
-    if(!token) location.href = "/login";
-    if(role !== "admin") location.href = "/staff";
+    if(!token) location.href = "/تسجيل-الدخول";
+    if(role !== "admin") location.href = "/الفاحص";
   }
 
-  function rowUser(u){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><b>${u.username}</b></td>
-      <td>${u.role}</td>
-      <td>
-        <div class="row" style="justify-content:center">
-          <input style="max-width:220px" placeholder="كلمة جديدة" id="pw_${u.username}"/>
-          <button class="black" data-user="${u.username}" data-act="pw">حفظ</button>
-        </div>
-      </td>
-      <td>
-        <button class="red" data-user="${u.username}" data-act="del" ${u.username==="admin"?"disabled":""}>حذف</button>
-      </td>
-    `;
-    return tr;
-  }
+  function ok(t){ App.setStatus(statusEl, t, true); }
+  function bad(t){ App.setStatus(statusEl, t, false); }
 
   async function refreshAll(){
     try{
-      App.setStatus(statusEl, "تحديث...");
       const users = await App.API.usersList();
-      tb.innerHTML = "";
-      users.users.forEach(u=> tb.appendChild(rowUser(u)));
-
-      // staff dropdown
       const staffUsers = users.users.filter(u=>u.role==="staff").map(u=>u.username);
       const currentSel = staffSelect.value;
       staffSelect.innerHTML = "";
@@ -368,14 +216,8 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         if(currentSel) staffSelect.value = currentSel;
       }
 
-      const st = await App.API.stats();
-      stTotal.textContent = st.stats.called_total ?? 0;
-      stM.textContent = st.stats.called_male ?? 0;
-      stF.textContent = st.stats.called_female ?? 0;
-
       const stt = await App.API.state();
       const s = stt.state;
-
       if(s.staffToAdmin && (s.staffToAdmin.text||"").trim()){
         staffMsgBy.textContent = s.staffToAdmin.by || "-";
         staffMsgAt.textContent = App.fmtTime(s.staffToAdmin.at);
@@ -385,139 +227,59 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         staffMsgAt.textContent = "-";
         staffMsgText.textContent = "لا توجد رسالة.";
       }
-
-      if(s.displayMessage && (s.displayMessage.text||"").trim()){
-        dispMsg.value = s.displayMessage.text;
-      }
-
-      App.setStatus(statusEl, "جاهز ✅");
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
+    }catch(e){}
   }
 
   btnToStaff.addEventListener("click", async ()=>{
     try{
       const to = staffSelect.value;
-      if(!to){ App.setStatus(statusEl, "اختر موظف أولاً", false); return; }
-      App.setStatus(statusEl, "إرسال...");
+      if(!to){ bad("اختر موظف أولاً"); return; }
+      ok("إرسال...");
       await App.API.toStaff(to, msgToStaff.value);
       msgToStaff.value = "";
-      msgState.textContent = "تم الإرسال إلى: " + to;
-      App.setStatus(statusEl, "تم ✅");
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
+      ok("تم ✅");
+    }catch(e){ bad("خطأ: " + e.message); }
   });
 
   btnDispOn.addEventListener("click", async ()=>{
-    try{
-      App.setStatus(statusEl, "تفعيل الرسالة...");
-      await App.API.setDisplayMessage(dispMsg.value, true);
-      App.setStatus(statusEl, "تم ✅");
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
+    try{ ok("إرسال..."); await App.API.setDisplayMessage(dispMsg.value, true); ok("تم ✅"); }
+    catch(e){ bad("خطأ: " + e.message); }
   });
 
   btnDispOff.addEventListener("click", async ()=>{
-    try{
-      App.setStatus(statusEl, "إلغاء العرض...");
-      await App.API.clearDisplayMessage();
-      App.setStatus(statusEl, "تم ✅");
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
+    try{ ok("إلغاء..."); await App.API.clearDisplayMessage(); ok("تم ✅"); }
+    catch(e){ bad("خطأ: " + e.message); }
+  });
+
+  btnTickerSend.addEventListener("click", async ()=>{
+    try{ ok("إرسال..."); await App.API.setTicker(tickerMsg.value); ok("تم ✅"); }
+    catch(e){ bad("خطأ: " + e.message); }
+  });
+
+  btnTickerClear.addEventListener("click", async ()=>{
+    if(!confirm("مسح ملاحظة الشريط؟")) return;
+    try{ ok("مسح..."); await App.API.clearTicker(); tickerMsg.value=""; ok("تم ✅"); }
+    catch(e){ bad("خطأ: " + e.message); }
+  });
+
+  btnPing.addEventListener("click", async ()=>{
+    try{ ok("تحديث..."); await App.API.pingDisplay(); ok("تم ✅"); }
+    catch(e){ bad("خطأ: " + e.message); }
   });
 
   btnResetQueue.addEventListener("click", async ()=>{
     if(!confirm("متأكد تصفير الدور الآلي؟")) return;
-    try{
-      App.setStatus(statusEl, "تصفير...");
-      await App.API.resetQueue();
-      App.setStatus(statusEl, "تم ✅");
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
-  });
-
-  btnAdd.addEventListener("click", async ()=>{
-    try{
-      App.setStatus(statusEl, "إضافة...");
-      await App.API.userAdd(newUser.value.trim(), newPass.value, newRole.value);
-      newUser.value=""; newPass.value="";
-      App.setStatus(statusEl, "تمت الإضافة ✅");
-      refreshAll();
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
-  });
-
-  btnRefresh.addEventListener("click", refreshAll);
-
-  tb.addEventListener("click", async (ev)=>{
-    const btn = ev.target.closest("button");
-    if(!btn) return;
-    const act = btn.dataset.act;
-    const user = btn.dataset.user;
-    if(!act || !user) return;
-
-    try{
-      if(act==="pw"){
-        const val = document.getElementById("pw_"+user).value;
-        if(!val) return;
-        App.setStatus(statusEl, "حفظ كلمة المرور...");
-        await App.API.userPass(user, val);
-        App.setStatus(statusEl, "تم ✅");
-      }
-      if(act==="del"){
-        if(user==="admin") return;
-        if(!confirm("متأكد تحذف المستخدم؟")) return;
-        App.setStatus(statusEl, "حذف...");
-        await App.API.userDelete(user);
-        App.setStatus(statusEl, "تم ✅");
-        refreshAll();
-      }
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
-  });
-
-  btnResetStats.addEventListener("click", async ()=>{
-    if(!confirm("متأكد تصفير الإحصائيات؟")) return;
-    try{
-      App.setStatus(statusEl, "تصفير الإحصائيات...");
-      await App.API.resetStats();
-      App.setStatus(statusEl, "تم ✅");
-      refreshAll();
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
-  });
-
-  btnAdminPw.addEventListener("click", async ()=>{
-    try{
-      if(!adminPw.value) return;
-      App.setStatus(statusEl, "تحديث كلمة مرور admin...");
-      await App.API.userPass("admin", adminPw.value);
-      adminPw.value="";
-      App.setStatus(statusEl, "تم ✅");
-    }catch(e){
-      App.setStatus(statusEl, "خطأ: " + e.message, false);
-    }
+    try{ ok("تصفير..."); await App.API.resetQueue(); ok("تم ✅"); }
+    catch(e){ bad("خطأ: " + e.message); }
   });
 
   btnLogout.addEventListener("click", async ()=>{
     try{ await App.API.logout(); }catch(e){}
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("role");
-    location.href = "/login";
+    localStorage.removeItem("token"); localStorage.removeItem("username"); localStorage.removeItem("role");
+    location.href="/تسجيل-الدخول";
   });
 
-  guard();
-  refreshAll();
-  setInterval(refreshAll, 2000);
+  guard(); refreshAll(); setInterval(refreshAll, 2500);
 </script>
 <script src="/app.js"></script>
 </body>
