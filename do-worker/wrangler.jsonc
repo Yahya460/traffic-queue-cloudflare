@@ -9,6 +9,6 @@
     ]
   },
   "migrations": [
-    { "tag": "v2", "new_sqlite_classes": ["QueueDO"] }
+    { "tag": "v3", "new_sqlite_classes": ["QueueDO"] }
   ]
 }

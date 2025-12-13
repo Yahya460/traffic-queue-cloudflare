@@ -45,11 +45,11 @@ const API = {
     });
   },
 
-  toStaff(text) {
+  toStaff(to, text) {
     return this.request("/api/message/to-staff", {
       method: "POST",
       headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ to, text }),
     });
   },
 
@@ -94,9 +94,9 @@ const API = {
 
 function setStatus(el, text, good=true){
   el.textContent = text;
-  el.style.borderColor = good ? "rgba(52,211,153,.35)" : "rgba(239,68,68,.35)";
-  el.style.background = good ? "rgba(52,211,153,.10)" : "rgba(239,68,68,.10)";
-  el.style.color = good ? "#d1fae5" : "#fee2e2";
+  el.style.borderColor = good ? "rgba(37,99,235,.35)" : "rgba(220,38,38,.35)";
+  el.style.background = good ? "rgba(37,99,235,.07)" : "rgba(220,38,38,.07)";
+  el.style.color = "#111827";
 }
 
 function fmtTime(iso){
@@ -114,18 +114,22 @@ function fmtHHMM(iso){
   }catch(e){ return ""; }
 }
 
-function beep(){
+function ding(){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = "sine";
-    o.frequency.value = 880;
-    g.gain.value = 0.08;
+    o.frequency.value = 740;
+    g.gain.value = 0.0001;
     o.connect(g); g.connect(ctx.destination);
     o.start();
-    setTimeout(()=>{ o.stop(); ctx.close(); }, 240);
+    const t0 = ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.08, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28);
+    o.stop(t0 + 0.30);
+    setTimeout(()=>ctx.close(), 350);
   }catch(e){}
 }
 
-window.App = { API, setStatus, fmtTime, fmtHHMM, beep };
+window.App = { API, setStatus, fmtTime, fmtHHMM, ding };

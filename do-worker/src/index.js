@@ -67,8 +67,10 @@ export class QueueDO extends DurableObject {
         current: null,
         previous: [],
         updatedAt: nowIso(),
+
         staffToAdmin: { text: "", by: "", at: "" },
-        adminToStaff: { text: "", by: "admin", at: "" },
+        adminToStaff: {},
+
         displayMessage: { text: "", by: "admin", at: "", active: false }
       };
       this.sql.exec("INSERT INTO kv(k,v) VALUES(?,?)", "state", JSON.stringify(initState));
@@ -223,6 +225,7 @@ export class QueueDO extends DurableObject {
       return json({ ok: true, state });
     }
 
+    // Staff -> Admin message
     if (path === "/api/message/to-admin" && request.method === "POST") {
       const auth = this.requireRole(request, ["staff"]);
       if (!auth.ok) return auth.res;
@@ -238,37 +241,26 @@ export class QueueDO extends DurableObject {
       return json({ ok: true });
     }
 
+    // Admin -> Staff targeted message
     if (path === "/api/message/to-staff" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
 
       const body = await readJson(request);
+      const to = String(body.to || "").trim();
       const text = String(body.text || "").trim();
+      if (!to) return json({ ok: false, error: "MISSING_TO" }, 400);
 
       const state = this.getState();
-      state.adminToStaff = { text, by: auth.ses.username, at: nowIso() };
+      if (!state.adminToStaff || typeof state.adminToStaff !== "object") state.adminToStaff = {};
+      state.adminToStaff[to] = { text, by: auth.ses.username, at: nowIso() };
       state.updatedAt = nowIso();
       this.setState(state);
 
       return json({ ok: true });
     }
 
-    // Backward compatibility: /api/note acts like staff->admin
-    if (path === "/api/note" && request.method === "POST") {
-      const auth = this.requireRole(request, ["staff"]);
-      if (!auth.ok) return auth.res;
-
-      const body = await readJson(request);
-      const text = String(body.note || "").trim();
-
-      const state = this.getState();
-      state.staffToAdmin = { text, by: auth.ses.username, at: nowIso() };
-      state.updatedAt = nowIso();
-      this.setState(state);
-
-      return json({ ok: true });
-    }
-
+    // Admin display-message
     if (path === "/api/display-message" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
@@ -296,6 +288,7 @@ export class QueueDO extends DurableObject {
       return json({ ok: true });
     }
 
+    // Admin queue reset
     if (path === "/api/queue/reset" && request.method === "POST") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
@@ -309,6 +302,7 @@ export class QueueDO extends DurableObject {
       return json({ ok: true });
     }
 
+    // Admin stats
     if (path === "/api/stats" && request.method === "GET") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
@@ -327,6 +321,7 @@ export class QueueDO extends DurableObject {
       return json({ ok: true });
     }
 
+    // Admin users
     if (path === "/api/users" && request.method === "GET") {
       const auth = this.requireRole(request, ["admin"]);
       if (!auth.ok) return auth.res;
@@ -392,6 +387,6 @@ export class QueueDO extends DurableObject {
 
 export default {
   async fetch() {
-    return new Response("traffic-queue-do v2 OK");
+    return new Response("traffic-queue-do v3 OK");
   }
 };
