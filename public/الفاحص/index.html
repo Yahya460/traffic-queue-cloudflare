@@ -72,7 +72,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
     <div class="row">
       <span class="pill" id="who">-</span>
       <span class="pill" id="status">جاهز</span>
-      <a class="pill" href="/العرض" style="text-decoration:none">شاشة العرض</a>
+      <a class="pill" href="/العرض/" style="text-decoration:none">شاشة العرض</a>
       <button class="black" id="btnLogout"><span id="icoLogout"></span>تسجيل الخروج</button>
     </div>
   </div>
@@ -170,7 +170,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username") || "-";
     who.textContent = username;
-    if(!token){ location.href = "/تسجيل-الدخول"; }
+    if(!token){ location.href = "/تسجيل-الدخول/"; }
   }
 
   async function refresh(){
@@ -226,7 +226,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   btnLogout.addEventListener("click", async ()=>{
     try{ await App.API.logout(); }catch(e){}
     localStorage.removeItem("token"); localStorage.removeItem("username"); localStorage.removeItem("role");
-    location.href="/تسجيل-الدخول";
+    location.href="/تسجيل-الدخول/";
   });
 
   guard(); refresh(); setInterval(refresh, 1200);

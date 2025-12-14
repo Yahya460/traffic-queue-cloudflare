@@ -91,9 +91,9 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         <div>حساب المدير الافتراضي (أول مرة فقط): <b>admin / admin1234</b></div>
         <div>روابط الصفحات:</div>
         <ul>
-          <li><a href="/العرض">شاشة العرض</a></li>
-          <li><a href="/الفاحص">شاشة الفاحص</a></li>
-          <li><a href="/المدير">لوحة المدير</a></li>
+          <li><a href="/العرض/">شاشة العرض</a></li>
+          <li><a href="/الفاحص/">شاشة الفاحص</a></li>
+          <li><a href="/المدير/">لوحة المدير</a></li>
         </ul>
       </div>
     </div>
@@ -138,8 +138,8 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
       localStorage.setItem("username", r.username);
       localStorage.setItem("role", r.role);
       App.setStatus(statusEl, "تم الدخول ✅");
-      if(r.role === "admin") location.href = "/المدير";
-      else location.href = "/الفاحص";
+      if(r.role === "admin") location.href = "/المدير/";
+      else location.href = "/الفاحص/";
     }catch(e){
       App.setStatus(statusEl, "فشل: " + e.message, false);
     }
