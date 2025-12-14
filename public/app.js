@@ -24,7 +24,23 @@
     return out;
   }
 
-  const App = {
+ // ✅ helper للرسائل في صفحات الدخول/الإدارة
+App.setStatus = function (msg, ok = false) {
+  const el =
+    document.querySelector("#status") ||
+    document.querySelector(".status") ||
+    document.querySelector("[data-status]");
+
+  if (!el) return;
+
+  el.textContent = msg || "";
+  el.style.display = msg ? "block" : "none";
+  el.style.color = ok ? "#16a34a" : "#dc2626";
+};
+
+// ✅ تأكد App تكون Global
+window.App = App;
+ const App = {
     token() {
       return localStorage.getItem(LS_TOKEN) || "";
     },
