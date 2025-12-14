@@ -1,11 +1,9 @@
-/* traffic-queue-cloudflare - public/app.js (fixed) */
+/* traffic-queue-cloudflare - app.js (final fix) */
 (() => {
   "use strict";
 
   const LS_TOKEN = "tq_token";
   const LS_USER = "tq_user";
-
-  const $ = (sel, root = document) => root.querySelector(sel);
 
   function safeJsonParse(txt) {
     try { return JSON.parse(txt); } catch { return null; }
@@ -24,26 +22,11 @@
     return out;
   }
 
- // ✅ helper للرسائل في صفحات الدخول/الإدارة
-App.setStatus = function (msg, ok = false) {
-  const el =
-    document.querySelector("#status") ||
-    document.querySelector(".status") ||
-    document.querySelector("[data-status]");
-
-  if (!el) return;
-
-  el.textContent = msg || "";
-  el.style.display = msg ? "block" : "none";
-  el.style.color = ok ? "#16a34a" : "#dc2626";
-};
-
-// ✅ تأكد App تكون Global
-window.App = App;
- const App = {
+  const App = {
     token() {
       return localStorage.getItem(LS_TOKEN) || "";
     },
+
     setToken(token) {
       if (token) localStorage.setItem(LS_TOKEN, token);
       else localStorage.removeItem(LS_TOKEN);
@@ -52,18 +35,19 @@ window.App = App;
     user() {
       return safeJsonParse(localStorage.getItem(LS_USER) || "null");
     },
+
     setUser(u) {
       if (u) localStorage.setItem(LS_USER, JSON.stringify(u));
       else localStorage.removeItem(LS_USER);
     },
 
-    // ✅ الدالة اللي كانت ناقصة وتسبب الخطأ
+    // ✅ دالة عرض الحالة (المفقودة سابقًا)
     setStatus(msg = "", kind = "info") {
-      const el = $("#status") || $("[data-status]");
+      const el = document.querySelector("#status") || document.querySelector("[data-status]");
       if (el) {
         el.textContent = msg;
         el.style.display = msg ? "" : "none";
-        el.dataset.kind = kind;
+        el.style.color = kind === "ok" ? "#16a34a" : "#dc2626";
       } else {
         if (msg) console.log(`[${kind}] ${msg}`);
       }
@@ -74,7 +58,6 @@ window.App = App;
       const headers = new Headers(opts.headers || {});
       const body = opts.body ?? null;
 
-      // attach token if exists
       const t = this.token();
       if (t && !headers.has("authorization")) {
         headers.set("authorization", `Bearer ${t}`);
@@ -157,6 +140,6 @@ window.App = App;
     },
   };
 
-  // مهم: تصدير App للصفحات
+  // ✅ تعريف App ككائن عام يمكن الوصول له من كل الصفحات
   window.App = App;
 })();
