@@ -37,6 +37,13 @@ const API = {
   pingDisplay() { return this.request("/api/display/ping", { method:"POST" }); },
   resetQueue() { return this.request("/api/queue/reset", { method:"POST" }); },
   usersList() { return this.request("/api/users"); }
+}
+  ,usersAdd(data){ return this.request("/api/users", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(data) }); }
+  ,usersDelete(username){ return this.request("/api/users/" + encodeURIComponent(username), { method:"DELETE" }); }
+  ,usersResetPassword(username, newPassword){ 
+      return this.request("/api/users/" + encodeURIComponent(username) + "/password", { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ password: newPassword }) });
+  }
+
 };
 
 function setStatus(el, text, good=true){

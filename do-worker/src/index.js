@@ -254,6 +254,66 @@ export class QueueDO extends DurableObject {
       return json({ ok: true, users: rows });
     }
 
+    
+    // --- إدارة المستخدمين (Admin فقط) ---
+    if (path === "/api/users" && request.method === "POST") {
+      const auth = await requireRole(this.sql, request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const body = await safeJson(request);
+      const username = (body?.username || "").trim();
+      const password = (body?.password || "").toString();
+      const role = (body?.role || "staff").toString();
+
+      if (!username || username.length < 2) return json({ ok: false, error: "INVALID_USERNAME" }, 400);
+      if (!password || password.length < 4) return json({ ok: false, error: "INVALID_PASSWORD" }, 400);
+      if (!["staff", "admin"].includes(role)) return json({ ok: false, error: "INVALID_ROLE" }, 400);
+
+      const exists = this.sql.exec("SELECT 1 FROM users WHERE username = ?", [username]).toArray();
+      if (exists.length) return json({ ok: false, error: "USER_EXISTS" }, 409);
+
+      const passwordHash = await sha256(password);
+      this.sql.exec("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", [username, passwordHash, role]);
+
+      return json({ ok: true });
+    }
+
+    // DELETE /api/users/:username
+    if (path.startsWith("/api/users/") && request.method === "DELETE" && !path.endsWith("/password")) {
+      const auth = await requireRole(this.sql, request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const username = decodeURIComponent(path.slice("/api/users/".length));
+      if (!username) return json({ ok: false, error: "INVALID_USERNAME" }, 400);
+      if (username === "admin") return json({ ok: false, error: "CANNOT_DELETE_ADMIN" }, 400);
+
+      this.sql.exec("DELETE FROM users WHERE username = ?", [username]);
+      // تنظيف أي جلسات قديمة لهذا المستخدم
+      this.sql.exec("DELETE FROM sessions WHERE username = ?", [username]);
+
+      return json({ ok: true });
+    }
+
+    // PUT /api/users/:username/password  (تغيير كلمة المرور)
+    if (path.startsWith("/api/users/") && path.endsWith("/password") && request.method === "PUT") {
+      const auth = await requireRole(this.sql, request, ["admin"]);
+      if (!auth.ok) return auth.res;
+
+      const base = path.slice("/api/users/".length, -"/password".length);
+      const username = decodeURIComponent(base);
+      const body = await safeJson(request);
+      const password = (body?.password || "").toString();
+      if (!username) return json({ ok: false, error: "INVALID_USERNAME" }, 400);
+      if (!password || password.length < 4) return json({ ok: false, error: "INVALID_PASSWORD" }, 400);
+
+      const passwordHash = await sha256(password);
+      this.sql.exec("UPDATE users SET password_hash = ? WHERE username = ?", [passwordHash, username]);
+      // قد تكون هناك جلسات قديمة، نحذفها ليُطلب تسجيل دخول جديد
+      this.sql.exec("DELETE FROM sessions WHERE username = ?", [username]);
+
+      return json({ ok: true });
+    }
+
     return json({ ok: false, error: "NOT_FOUND" }, 404);
   }
 }

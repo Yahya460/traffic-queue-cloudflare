@@ -95,6 +95,51 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
         <div class="small">من: <b id="staffMsgBy">-</b> — <span id="staffMsgAt">-</span></div>
         <div id="staffMsgText" style="margin-top:6px;font-weight:1100">لا توجد رسالة.</div>
       </div>
+
+    <div class="card" id="usersCard">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:1100">إدارة الموظفين (إضافة / حذف)</div>
+        <span id="icoUsers"></span>
+      </div>
+      <div class="small" style="margin-top:4px">هذه القائمة تخص حسابات الفاحصين (الموظفين) لتسجيل الدخول.</div>
+
+      <div style="margin-top:10px;overflow:auto">
+        <table class="tbl" style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="text-align:right;padding:8px;border-bottom:1px solid #e5e7eb">المستخدم</th>
+              <th style="text-align:right;padding:8px;border-bottom:1px solid #e5e7eb">الصلاحية</th>
+              <th style="padding:8px;border-bottom:1px solid #e5e7eb">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody">
+            <tr><td colspan="3" class="small" style="padding:10px">... جاري التحميل</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr/>
+
+      <div class="grid">
+        <label class="small">اسم المستخدم</label>
+        <input id="newUser" placeholder="مثال: خالد" />
+        <label class="small">كلمة المرور</label>
+        <input id="newPass" type="password" placeholder="••••" />
+        <label class="small">الصلاحية</label>
+        <select id="newRole">
+          <option value="staff" selected>موظف (فاحص)</option>
+          <option value="admin">مدير</option>
+        </select>
+
+        <div class="row">
+          <button class="blue" id="btnAddUser">إضافة</button>
+          <button class="black" id="btnReloadUsers">تحديث القائمة</button>
+        </div>
+
+        <div class="small" id="usersStatus" style="color:#6b7280"></div>
+      </div>
+    </div>
+
     </div>
 
     <div class="card">
@@ -195,9 +240,93 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   function ok(t){ App.setStatus(statusEl, t, true); }
   function bad(t){ App.setStatus(statusEl, t, false); }
 
-  async function refreshAll(){
+  
+  // ===== إدارة الموظفين =====
+  function renderUsersTable(users){
+    const tbody = document.getElementById("usersTbody");
+    if(!tbody) return;
+    const rows = (users || []).map(u=>{
+      const safeUser = (u.username || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const roleLabel = u.role === "admin" ? "مدير" : "موظف";
+      const delBtn = u.username === "admin"
+        ? `<span class="small" style="color:#9ca3af">محمي</span>`
+        : `<button class="red" data-del="${encodeURIComponent(u.username)}">حذف</button>`;
+      const passBtn = `<button class="black" data-pass="${encodeURIComponent(u.username)}">تغيير كلمة المرور</button>`;
+      return `<tr>
+        <td style="padding:8px;border-bottom:1px solid #f1f5f9">${safeUser}</td>
+        <td style="padding:8px;border-bottom:1px solid #f1f5f9">${roleLabel}</td>
+        <td style="padding:8px;border-bottom:1px solid #f1f5f9;white-space:nowrap;text-align:center">
+          ${passBtn} ${delBtn}
+        </td>
+      </tr>`;
+    }).join("");
+    tbody.innerHTML = rows || `<tr><td colspan="3" class="small" style="padding:10px">لا يوجد موظفين</td></tr>`;
+
+    // delete handlers
+    tbody.querySelectorAll("button[data-del]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const username = decodeURIComponent(btn.getAttribute("data-del"));
+        if(!confirm("حذف المستخدم: " + username + " ؟")) return;
+        setUsersStatus("... جاري الحذف");
+        try{
+          const res = await App.API.usersDelete(username);
+          if(res?.ok) setUsersStatus("تم الحذف ✅");
+          else setUsersStatus("تعذر الحذف: " + (res?.error || "خطأ"));
+          await refreshAll();
+        }catch(e){
+          setUsersStatus("تعذر الحذف: " + e.message);
+        }
+      });
+    });
+
+    // reset password handlers
+    tbody.querySelectorAll("button[data-pass]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const username = decodeURIComponent(btn.getAttribute("data-pass"));
+        const newPass = prompt("اكتب كلمة مرور جديدة لـ " + username + ":");
+        if(!newPass) return;
+        setUsersStatus("... جاري حفظ كلمة المرور");
+        try{
+          const res = await App.API.usersResetPassword(username, newPass);
+          if(res?.ok) setUsersStatus("تم تحديث كلمة المرور ✅");
+          else setUsersStatus("تعذر: " + (res?.error || "خطأ"));
+        }catch(e){
+          setUsersStatus("تعذر: " + e.message);
+        }
+      });
+    });
+  }
+
+  function setUsersStatus(msg){
+    const el = document.getElementById("usersStatus");
+    if(el) el.textContent = msg || "";
+  }
+
+  async function addUserFromForm(){
+    const u = document.getElementById("newUser")?.value?.trim();
+    const p = document.getElementById("newPass")?.value?.toString() || "";
+    const r = document.getElementById("newRole")?.value || "staff";
+    if(!u || u.length < 2) return setUsersStatus("اسم المستخدم غير صحيح");
+    if(!p || p.length < 4) return setUsersStatus("كلمة المرور قصيرة (أقل شي 4 أحرف)");
+    setUsersStatus("... جاري الإضافة");
+    try{
+      const res = await App.API.usersAdd({ username:u, password:p, role:r });
+      if(res?.ok){
+        setUsersStatus("تمت الإضافة ✅");
+        document.getElementById("newPass").value = "";
+        await refreshAll();
+      }else{
+        setUsersStatus("تعذر الإضافة: " + (res?.error || "خطأ"));
+      }
+    }catch(e){
+      setUsersStatus("تعذر الإضافة: " + e.message);
+    }
+  }
+
+async function refreshAll(){
     try{
       const users = await App.API.usersList();
+      renderUsersTable(users);
       const staffUsers = users.users.filter(u=>u.role==="staff").map(u=>u.username);
       const currentSel = staffSelect.value;
       staffSelect.innerHTML = "";
