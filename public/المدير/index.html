@@ -325,9 +325,10 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
 async function refreshAll(){
     try{
-      const users = await App.API.usersList();
-      renderUsersTable(users);
-      const staffUsers = users.users.filter(u=>u.role==="staff").map(u=>u.username);
+      const usersRes = await App.API.usersList();
+      const list = (usersRes && usersRes.users) ? usersRes.users : (Array.isArray(usersRes) ? usersRes : []);
+      renderUsersTable(list);
+      const staffUsers = list.filter(u=>u.role==="staff").map(u=>u.username);
       const currentSel = staffSelect.value;
       staffSelect.innerHTML = "";
       if(staffUsers.length===0){
@@ -356,8 +357,10 @@ async function refreshAll(){
         staffMsgAt.textContent = "-";
         staffMsgText.textContent = "لا توجد رسالة.";
       }
-    }catch(e){}
-  }
+    }catch(e){
+      setUsersStatus("خطأ في التحديث: " + (e?.message || e));
+    }
+}
 
   btnToStaff.addEventListener("click", async ()=>{
     try{
@@ -407,9 +410,11 @@ async function refreshAll(){
     localStorage.removeItem("token"); localStorage.removeItem("username"); localStorage.removeItem("role");
     location.href="/تسجيل-الدخول/";
   });
-
-  guard(); refreshAll(); setInterval(refreshAll, 2500);
+  window.addEventListener("DOMContentLoaded", ()=>{
+    guard();
+    refreshAll();
+    setInterval(refreshAll, 2500);
+  });
 </script>
-<script src="/app.js?v=fix100"></script>
 </body>
 </html>
