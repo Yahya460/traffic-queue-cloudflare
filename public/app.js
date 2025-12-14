@@ -1,19 +1,23 @@
-/* traffic-queue-cloudflare - app.js (final fix) */
-(() => {
+/* traffic-queue-cloudflare - app.js (stable globals) */
+(function () {
   "use strict";
 
   const LS_TOKEN = "tq_token";
   const LS_USER = "tq_user";
 
+  function $(sel, root = document) { return root.querySelector(sel); }
+  function byId(id) { return document.getElementById(id); }
+
   function safeJsonParse(txt) {
     try { return JSON.parse(txt); } catch { return null; }
   }
 
-  async function fetchJson(url, options = {}) {
-    const res = await fetch(url, options);
+  async function fetchJson(url, opts = {}) {
+    const res = await fetch(url, opts);
     const text = await res.text();
     const data = safeJsonParse(text);
     const out = (data && typeof data === "object") ? data : { ok: false, raw: text };
+
     if (!res.ok) {
       out.ok = false;
       out.status = res.status;
@@ -22,124 +26,92 @@
     return out;
   }
 
+  function token() { return localStorage.getItem(LS_TOKEN) || ""; }
+  function setToken(t) { t ? localStorage.setItem(LS_TOKEN, t) : localStorage.removeItem(LS_TOKEN); }
+  function setUser(u) { u ? localStorage.setItem(LS_USER, u) : localStorage.removeItem(LS_USER); }
+  function getUser() { return localStorage.getItem(LS_USER) || ""; }
+
+  function setStatus(msg, kind = "info") {
+    const el = byId("status") || $(".status") || byId("msg");
+    if (el) {
+      el.textContent = msg || "";
+      el.dataset.kind = kind;
+      el.style.display = msg ? "" : "none";
+    } else if (msg) {
+      console[kind === "error" ? "error" : "log"](msg);
+    }
+  }
+
+  async function request(path, { method = "GET", body, headers } = {}) {
+    const h = Object.assign({}, headers || {});
+    const t = token();
+    if (t) h["authorization"] = `Bearer ${t}`;
+
+    if (body !== undefined && body !== null) {
+      if (!(body instanceof FormData)) {
+        h["content-type"] = h["content-type"] || "application/json; charset=utf-8";
+        body = typeof body === "string" ? body : JSON.stringify(body);
+      }
+    }
+    return fetchJson(path, { method, headers: h, body });
+  }
+
+  // Global helper (some pages call go(...) مباشرة)
+  function go(url) {
+    if (!url) return;
+    window.location.href = url;
+  }
+
   const App = {
-    token() {
-      return localStorage.getItem(LS_TOKEN) || "";
-    },
+    // storage
+    token, setToken, getUser, setUser,
 
-    setToken(token) {
-      if (token) localStorage.setItem(LS_TOKEN, token);
-      else localStorage.removeItem(LS_TOKEN);
-    },
+    // ui
+    setStatus,
 
-    user() {
-      return safeJsonParse(localStorage.getItem(LS_USER) || "null");
-    },
+    // api core
+    request,
+    health: () => fetchJson("/api/health"),
 
-    setUser(u) {
-      if (u) localStorage.setItem(LS_USER, JSON.stringify(u));
-      else localStorage.removeItem(LS_USER);
-    },
-
-    // ✅ دالة عرض الحالة (المفقودة سابقًا)
-    setStatus(msg = "", kind = "info") {
-      const el = document.querySelector("#status") || document.querySelector("[data-status]");
-      if (el) {
-        el.textContent = msg;
-        el.style.display = msg ? "" : "none";
-        el.style.color = kind === "ok" ? "#16a34a" : "#dc2626";
-      } else {
-        if (msg) console.log(`[${kind}] ${msg}`);
+    login: async (username, password) => {
+      setStatus("");
+      const data = await request("/api/login", { method: "POST", body: { username, password } });
+      if (data && data.ok && data.token) {
+        setToken(data.token);
+        setUser(username);
       }
+      return data;
     },
 
-    async request(path, opts = {}) {
-      const method = opts.method || "GET";
-      const headers = new Headers(opts.headers || {});
-      const body = opts.body ?? null;
-
-      const t = this.token();
-      if (t && !headers.has("authorization")) {
-        headers.set("authorization", `Bearer ${t}`);
-      }
-
-      return fetchJson(path, { method, headers, body });
+    logout: async () => {
+      const data = await request("/api/logout", { method: "POST" });
+      setToken("");
+      setUser("");
+      return data;
     },
 
-    async login(username, password) {
-      const res = await this.request("/api/login", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ username, password }),
-      });
+    state: () => request("/api/state"),
+    next: (number, gender) => request("/api/next", { method: "POST", body: { number, gender } }),
+    prev: () => request("/api/prev", { method: "POST" }),
 
-      if (res && res.ok && res.token) {
-        this.setToken(res.token);
-        this.setUser(res.user || { username });
-      }
-      return res;
-    },
+    resetQueue: () => request("/api/resetQueue", { method: "POST" }),
+    resetStats: () => request("/api/resetStats", { method: "POST" }),
 
-    async logout() {
-      const res = await this.request("/api/logout", { method: "POST" });
-      this.setToken("");
-      this.setUser(null);
-      return res;
-    },
+    sendCenterMessage: (message) => request("/api/centerMessage", { method: "POST", body: { message } }),
+    clearCenterMessage: () => request("/api/centerMessage", { method: "DELETE" }),
 
-    async state() {
-      return this.request("/api/state");
-    },
+    sendTicker: (message) => request("/api/ticker", { method: "POST", body: { message } }),
+    clearTicker: () => request("/api/ticker", { method: "DELETE" }),
 
-    async next(number, gender) {
-      return this.request("/api/next", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ number, gender }),
-      });
-    },
-
-    async prev() {
-      return this.request("/api/prev", { method: "POST" });
-    },
-
-    async sendCenterMessage(text) {
-      return this.request("/api/center-message", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ text }),
-      });
-    },
-
-    async setTickerNote(text) {
-      return this.request("/api/ticker-note", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ text }),
-      });
-    },
-
-    async users() {
-      return this.request("/api/users");
-    },
-
-    async addUser(username, password, role = "staff") {
-      return this.request("/api/users", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ username, password, role }),
-      });
-    },
-
-    async deleteUser(username) {
-      return this.request("/api/users", {
-        method: "DELETE",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ username }),
-      });
-    },
+    // users management
+    usersList: () => request("/api/users"),
+    usersAdd: (username, password, role = "staff") =>
+      request("/api/users", { method: "POST", body: { username, password, role } }),
+    usersDelete: (username) =>
+      request(`/api/users/${encodeURIComponent(username)}`, { method: "DELETE" }),
   };
 
-  // ✅ تعريف App ككائن عام يمكن الوصول له من كل الصفحات
+  // expose AFTER App is defined (يحل مشكلة: Cannot access 'App' before initialization)
+  window.go = go;
   window.App = App;
 })();
