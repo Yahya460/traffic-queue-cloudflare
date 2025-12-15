@@ -95,6 +95,8 @@ export class QueueDO {
 
       return Response.json({ ok: true });
     }
+return Response.json({ ok: true });
+    }
 
     return Response.json({ ok: false, error: "NOT_FOUND" }, { status: 404 });
   }
