@@ -1,10 +1,9 @@
-/* public/app.js - تعريف window.App بشكل ثابت بدون أخطاء */
+/* public/app.js - STABLE (Token + User saved) */
 
 (function () {
   "use strict";
 
-  // مفاتيح التخزين (متوافقة مع اللي عندك)
-  var LS_TOKEN = "tq_token";   // (مو مستخدم حالياً لأن السيرفر ما يرجّع token)
+  var LS_TOKEN = "tq_token";
   var LS_USER  = "tq_user";
 
   function safeJsonParse(txt) {
@@ -44,7 +43,7 @@
   function fetchJson(path, opts) {
     if (!opts) opts = {};
     if (!opts.headers) opts.headers = {};
-    // لو عندك توكن مستقبلاً
+
     var t = token();
     if (t) opts.headers["Authorization"] = "Bearer " + t;
 
@@ -67,16 +66,43 @@
         headers: { "content-type": "application/json; charset=utf-8" },
         body: JSON.stringify({ username: username, password: password })
       }).then(function (r) {
-        // نتوقع: { ok:true, user:{username, role} }
-        if (!r || !r.ok || !r.user) return { ok: false, error: r && r.error ? r.error : "INVALID_LOGIN" };
-        return { ok: true, username: r.user.username, role: r.user.role };
+        // نتوقع الآن: { ok:true, token:"...", user:{username, role} }
+        if (!r || !r.ok || !r.user) {
+          return { ok: false, error: (r && r.error) ? r.error : "INVALID_LOGIN" };
+        }
+
+        // ✅ خزّن التوكن + المستخدم
+        if (r.token) setToken(r.token);
+        setUser({ username: r.user.username, role: r.user.role });
+
+        return { ok: true, token: r.token || "", username: r.user.username, role: r.user.role };
+      });
+    },
+
+    logout: function () {
+      return fetchJson("/api/logout", { method: "POST" }).then(function (r) {
+        setToken("");
+        setUser(null);
+        return r;
+      });
+    },
+
+    // مستخدمين (Admin)
+    getUsers: function () {
+      return fetchJson("/api/users", { method: "GET" });
+    },
+
+    addUser: function (username, password, role) {
+      return fetchJson("/api/users", {
+        method: "POST",
+        headers: { "content-type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ username: username, password: password, role: role })
       });
     }
   };
 
   function go(path) { window.location.href = path; }
 
-  // expose
   window.App = {
     API: API,
     setStatus: setStatus,
