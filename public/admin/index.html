@@ -1,34 +1,75 @@
-<hr>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>لوحة المدير</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{
+      font-family: system-ui;
+      background:#f3f4f6;
+      padding:20px;
+    }
+    h1{margin-bottom:10px}
+    .box{
+      background:#fff;
+      padding:20px;
+      border-radius:12px;
+      max-width:500px;
+    }
+    button{
+      padding:10px 16px;
+      margin-top:10px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
 
-<h3>إرسال صورة إلى شاشة العرض (Base64)</h3>
+<h1>لوحة المدير</h1>
 
-<input type="file" id="imgInput" accept="image/*">
-<br><br>
-<button onclick="sendImage()">إرسال الصورة</button>
+<div class="box">
+  <p>رفع صورة أو تصوير (تظهر في شاشة العرض بالوسط)</p>
+
+  <input type="file" id="imgFile" accept="image/*">
+  <br><br>
+  <button onclick="sendImage()">إرسال الصورة للشاشة</button>
+</div>
 
 <script>
 async function sendImage(){
-  const file = document.getElementById("imgInput").files[0];
+  const file = document.getElementById("imgFile").files[0];
   if(!file){
-    alert("اختر صورة أولًا");
+    alert("اختر صورة أولاً");
     return;
   }
 
   const reader = new FileReader();
   reader.onload = async () => {
-    const res = await fetch("/api/center-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: reader.result })
-    });
+    try{
+      const res = await fetch("/api/center-image",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+          image: reader.result
+        })
+      });
 
-    const j = await res.json();
-    if(j.ok){
-      alert("تم إرسال الصورة للشاشة ✅");
-    }else{
-      alert("فشل الإرسال ❌");
+      const data = await res.json();
+      if(data.ok){
+        alert("تم إرسال الصورة بنجاح ✅");
+      }else{
+        alert("فشل الإرسال ❌");
+      }
+    }catch(e){
+      alert("خطأ في الاتصال");
     }
   };
   reader.readAsDataURL(file);
 }
 </script>
+
+</body>
+</html>
