@@ -1,5 +1,5 @@
-/* traffic-queue-cloudflare - public/app.js (FIXED 100%) */
-/* هذا الملف يُعرّف window.App ويحل مشاكل: App is not defined / setStatus missing / SyntaxError */
+/* traffic-queue-cloudflare - public/app.js (STABLE) */
+/* يعرّف window.App ويمنع أخطاء: App is not defined / setStatus missing */
 
 (() => {
   "use strict";
@@ -40,7 +40,7 @@
     else localStorage.removeItem(LS_USER);
   }
 
-  // دالة الحالة (Status) المطلوبة داخل الصفحات
+  // شريط الحالة
   function setStatus(el, msg = "", kind = "info") {
     if (!el) return;
     el.textContent = msg || "";
@@ -56,7 +56,7 @@
     async request(path, opts = {}) {
       const headers = Object.assign({}, opts.headers || {});
       const t = token();
-      if (t) headers["Authorization"] = `Bearer ${t}`;
+      if (t) headers["Authorization"] = Bearer ${t};
       opts.headers = headers;
       return fetchJson(path, opts);
     },
@@ -74,7 +74,7 @@
       return this.request("/api/logout", { method: "POST" });
     },
 
-    // ---- State / Queue ----
+    // ---- Queue ----
     state() {
       return this.request("/api/state");
     },
@@ -95,7 +95,7 @@
       return this.request("/api/queue/reset", { method: "POST" });
     },
 
-    // ---- Display message (المربع الأوسط) ----
+    // ---- Display message (العمود الأوسط) ----
     setDisplayMessage(text, active = true) {
       return this.request("/api/display-message", {
         method: "POST",
@@ -125,7 +125,6 @@
       return this.request("/api/ticker/clear", { method: "POST" });
     },
 
-    // alias (بعض الصفحات قد تستخدم هذا الاسم)
     sendTicker(text) { return this.setTicker(text); },
 
     // ---- Messages ----
@@ -145,7 +144,6 @@
       });
     },
 
-    // aliases
     sendToAdmin(text) { return this.toAdmin(text); },
     sendStaffMessage(to, text) { return this.toStaff(to, text); },
 
@@ -178,7 +176,6 @@
       });
     },
 
-    // aliases (للوحة المدير)
     getUsers() { return this.usersList(); },
     addUser(username, password, role = "staff") { return this.usersAdd(username, password, role); },
     deleteUser(username) { return this.usersDelete(username); },
@@ -194,7 +191,7 @@
     const d = new Date(ts);
     const hh = String(d.getHours()).padStart(2, "0");
     const mm = String(d.getMinutes()).padStart(2, "0");
-    return `${hh}:${mm}`;
+    return ${hh}:${mm};
   }
 
   function fmtTime(ts) {
@@ -204,6 +201,5 @@
 
   // expose
   window.App = { API, token, setToken, getUser, setUser, setStatus, go, fmtTime, fmtHHMM };
-  window.setStatus = setStatus; // توافق مع أي كود قديم
+  window.setStatus = setStatus; // توافق مع أي كود قديم
 })();
-
