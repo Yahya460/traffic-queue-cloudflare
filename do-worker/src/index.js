@@ -51,10 +51,19 @@ export class QueueDO extends DurableObject {
   }
 
   async ensureAdminAsync() {
+    // admin الافتراضي
     const admin = this.sql.exec("SELECT username FROM users WHERE username='admin'").toArray()[0];
-    if (admin) return;
-    const passhash = await sha256("admin1234");
-    this.sql.exec("INSERT INTO users(username, passhash, role, created_at) VALUES(?,?,?,?)", "admin", passhash, "admin", nowIso());
+    if (!admin) {
+      const passhash = await sha256("admin1234");
+      this.sql.exec("INSERT INTO users(username, passhash, role, created_at) VALUES(?,?,?,?)", "admin", passhash, "admin", nowIso());
+    }
+
+    // المدير المطلوب: يوسف / 2626
+    const yusuf = this.sql.exec("SELECT username FROM users WHERE username='يوسف'").toArray()[0];
+    if (!yusuf) {
+      const passhash2 = await sha256("2626");
+      this.sql.exec("INSERT INTO users(username, passhash, role, created_at) VALUES(?,?,?,?)", "يوسف", passhash2, "admin", nowIso());
+    }
   }
 
   getState() {

@@ -229,16 +229,19 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   const btnLogout = document.getElementById("btnLogout");
 
   function guard(){
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    const username = localStorage.getItem("username") || "-";
+    const token = localStorage.getItem("tq_token");
+    const userRaw = localStorage.getItem("tq_user");
+    let user = null;
+    try{ user = userRaw ? JSON.parse(userRaw) : null; }catch(e){ user=null; }
+    const username = (user && user.username) ? user.username : "-";
+    const role = (user && user.role) ? user.role : "";
     who.textContent = username + " (admin)";
     if(!token) location.href = "/تسجيل-الدخول/";
     if(role !== "admin") location.href = "/الفاحص/";
   }
 
-  function ok(t){ App.setStatus(statusEl, t, true); }
-  function bad(t){ App.setStatus(statusEl, t, false); }
+  function ok(t){ App.setStatus(statusEl, t, "ok"); }
+  function bad(t){ App.setStatus(statusEl, t, "err"); }
 
   
   // ===== إدارة الموظفين =====
@@ -357,10 +360,11 @@ async function refreshAll(){
         staffMsgAt.textContent = "-";
         staffMsgText.textContent = "لا توجد رسالة.";
       }
-    }catch(e){
+    }
+    catch(e){
       setUsersStatus("خطأ في التحديث: " + (e?.message || e));
     }
-}
+  }
 
   btnToStaff.addEventListener("click", async ()=>{
     try{
@@ -410,11 +414,9 @@ async function refreshAll(){
     localStorage.removeItem("token"); localStorage.removeItem("username"); localStorage.removeItem("role");
     location.href="/تسجيل-الدخول/";
   });
-  window.addEventListener("DOMContentLoaded", ()=>{
-    guard();
-    refreshAll();
-    setInterval(refreshAll, 2500);
-  });
+
+  guard(); refreshAll(); setInterval(refreshAll, 2500);
 </script>
+<script src="/app.js?v=fixYusuf"></script>
 </body>
 </html>
