@@ -1,122 +1,125 @@
-/* public/app.js - Stable window.App (Cloudflare Pages + DO API) */
+/* public/app.js - Stable window.App (token/username/role) */
 (function () {
   "use strict";
 
-  var LS_TOKEN = "tq_token";
-  var LS_USER  = "tq_user";
+  var LS_TOKEN = "token";
+  var LS_USER  = "username";
+  var LS_ROLE  = "role";
 
-  function safeJsonParse(txt) { try { return JSON.parse(txt); } catch (e) { return null; } }
+  function safeJsonParse(txt){ try{return JSON.parse(txt);}catch(e){return null;} }
 
-  function setStatus(el, msg, kind) {
+  function setStatus(el, msg, ok) {
     if (!el) return;
     el.textContent = msg || "";
-    try {
-      el.style.color = "";
-      if (kind === "ok") el.style.color = "#16a34a";
-      else if (kind === "err") el.style.color = "#dc2626";
-      else if (kind === "warn") el.style.color = "#d97706";
-      else el.style.color = "#334155";
-    } catch (e) {}
+    el.style.color = ok === true ? "#16a34a" : ok === false ? "#dc2626" : "#334155";
   }
 
-  function setToken(t) {
-    if (!t) localStorage.removeItem(LS_TOKEN);
-    else localStorage.setItem(LS_TOKEN, String(t));
-  }
-  function token() { return localStorage.getItem(LS_TOKEN) || ""; }
+  function getToken(){ return localStorage.getItem(LS_TOKEN) || ""; }
+  function setToken(t){ if(t) localStorage.setItem(LS_TOKEN, String(t)); else localStorage.removeItem(LS_TOKEN); }
 
-  function setUser(u) {
-    if (!u) localStorage.removeItem(LS_USER);
-    else localStorage.setItem(LS_USER, JSON.stringify(u));
+  function getMe(){
+    return {
+      username: localStorage.getItem(LS_USER) || "",
+      role: localStorage.getItem(LS_ROLE) || ""
+    };
   }
-  function getUser() { return safeJsonParse(localStorage.getItem(LS_USER) || "null"); }
+  function setMe(username, role){
+    if (username) localStorage.setItem(LS_USER, username); else localStorage.removeItem(LS_USER);
+    if (role) localStorage.setItem(LS_ROLE, role); else localStorage.removeItem(LS_ROLE);
+  }
 
-  function fetchJson(path, opts) {
+  function authHeaders(){
+    var h = { "content-type": "application/json; charset=utf-8" };
+    var t = getToken();
+    if (t) h["Authorization"] = "Bearer " + t;
+    return h;
+  }
+
+  function fetchJson(path, opts){
     opts = opts || {};
-    opts.headers = opts.headers || {};
-
-    var t = token();
-    if (t) opts.headers["Authorization"] = "Bearer " + t;
-
-    return fetch(path, opts).then(function (res) {
-      return res.text().then(function (text) {
+    opts.headers = Object.assign({}, opts.headers || {});
+    return fetch(path, opts).then(function(res){
+      return res.text().then(function(text){
         var data = safeJsonParse(text);
-        if (!data || typeof data !== "object") data = { ok: false, raw: text };
+        if (!data || typeof data !== "object") data = { ok:false, raw:text };
         data._status = res.status;
-        data._statusText = res.statusText;
         if (!res.ok) data.ok = false;
         return data;
       });
     });
   }
 
-  function fmtHHMM(ts) {
-    if (!ts) return "";
-    var d = new Date(ts);
-    var hh = String(d.getHours()).padStart(2, "0");
-    var mm = String(d.getMinutes()).padStart(2, "0");
-    return hh + ":" + mm;
-  }
-
   var API = {
-    health: function () { return fetchJson("/api/health"); },
-    state:  function () { return fetchJson("/api/state"); },
+    health: function(){ return fetchJson("/api/health"); },
 
-    login: function (username, password) {
+    login: function(username, password){
       return fetchJson("/api/login", {
         method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
+        headers: authHeaders(),
         body: JSON.stringify({ username: username, password: password })
-      }).then(function (r) {
-        // عندك بالسيرفر يرجع: {ok:true, token:"...", username:"...", role:"..."}
-        if (!r || !r.ok) throw new Error((r && r.error) ? r.error : "LOGIN_FAILED");
-        return r;
+      }).then(function(r){
+        if (!r || !r.ok) throw new Error("فشل تسجيل الدخول");
+        var token = r.token || "";
+        var uname = r.username || (r.user && r.user.username) || "";
+        var role  = r.role || (r.user && r.user.role) || "";
+        if (!uname || !role) throw new Error("رد API ناقص (username/role)");
+        return { token: token, username: uname, role: role };
       });
     },
 
-    // نداء من الفاحص
-    next: function (number, gender) {
+    logout: function(){
+      return fetchJson("/api/logout", { method:"POST", headers: authHeaders() });
+    },
+
+    state: function(){ return fetchJson("/api/state"); },
+
+    next: function(number, gender){
       return fetchJson("/api/next", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
+        method:"POST",
+        headers: authHeaders(),
         body: JSON.stringify({ number: number, gender: gender })
       });
     },
 
-    prev: function () { return fetchJson("/api/prev", { method: "POST" }); },
-
-    // رسالة المدير (الشريط أو الرسالة)
-    setTicker: function (text) {
-      return fetchJson("/api/ticker", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ text: text })
-      });
+    prev: function(){
+      return fetchJson("/api/prev", { method:"POST", headers: authHeaders() });
     },
 
-    // صورة الوسط (مدير فقط) — لو API عندك موجودة
-    setCenterImage: function (dataUrl) {
-      return fetchJson("/api/center-image", {
-        method: "POST",
-        headers: { "content-type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ dataUrl: dataUrl })
+    // إدارة الموظفين
+    usersList: function(){
+      return fetchJson("/api/users", { method:"GET", headers: authHeaders() });
+    },
+    usersAdd: function(username, password, role){
+      return fetchJson("/api/users", {
+        method:"POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ username: username, password: password, role: role || "staff" })
       });
     },
-    clearCenterImage: function () {
-      return fetchJson("/api/center-image/clear", { method: "POST" });
+    usersDelete: function(username){
+      return fetchJson("/api/users/" + encodeURIComponent(username), {
+        method:"DELETE",
+        headers: authHeaders()
+      });
+    },
+    usersResetPassword: function(username, password){
+      return fetchJson("/api/users/" + encodeURIComponent(username) + "/password", {
+        method:"PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ password: password })
+      });
     }
   };
 
-  function go(path) { window.location.href = path; }
+  function go(path){ window.location.href = path; }
 
   window.App = {
     API: API,
     setStatus: setStatus,
+    getToken: getToken,
     setToken: setToken,
-    token: token,
-    setUser: setUser,
-    getUser: getUser,
-    go: go,
-    fmtHHMM: fmtHHMM
+    getMe: getMe,
+    setMe: setMe,
+    go: go
   };
 })();

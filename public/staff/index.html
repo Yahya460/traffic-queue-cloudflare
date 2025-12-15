@@ -4,73 +4,94 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>شاشة الفاحص</title>
-  <style>
-    body{margin:0;font-family:system-ui;background:#fff;color:#111}
-    .wrap{max-width:900px;margin:0 auto;padding:18px}
-    .card{border:1px solid #e5e7eb;border-radius:16px;background:#f8fafc;padding:16px;margin-top:12px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input,select{padding:12px;border-radius:14px;border:1px solid #d1d5db;font-size:16px}
-    button{padding:12px 14px;border-radius:14px;border:1px solid #cbd5e1;background:#eef2ff;font-weight:900;cursor:pointer}
-    .pill{font-size:12px;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:6px 10px}
-  </style>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<div class="wrap">
-  <div class="row" style="justify-content:space-between">
-    <div style="font-weight:1000">شاشة الفاحص</div>
-    <span class="pill" id="st">جاهز</span>
-  </div>
-
+<div class="container">
   <div class="card">
-    <div class="row">
-      <input id="num" placeholder="رقم التلميذ" style="width:200px">
-      <select id="gender">
-        <option value="male">رجال</option>
-        <option value="female">نساء</option>
-      </select>
-      <button id="btn">نداء</button>
-      <button id="prev">العميل السابق</button>
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="h1">شاشة الفاحص</div>
+        <div class="small" id="me"></div>
+      </div>
+      <div class="row">
+        <a class="pill" href="/display/" target="_blank">فتح شاشة العرض</a>
+        <a class="pill" href="/login/">تسجيل دخول</a>
+      </div>
     </div>
-    <div class="row" style="margin-top:10px">
-      <a href="/display/">شاشة العرض</a>
-      <a href="/admin/">لوحة المدير</a>
-      <a href="/login/">تسجيل الدخول</a>
+
+    <hr>
+
+    <div class="grid grid2">
+      <div>
+        <div class="small">رقم المتدرب</div>
+        <input id="num" inputmode="numeric" placeholder="مثال: 12">
+      </div>
+      <div>
+        <div class="small">النوع</div>
+        <select id="gender">
+          <option value="male">رجال</option>
+          <option value="female">نساء</option>
+        </select>
+      </div>
     </div>
+
+    <div class="row" style="margin-top:12px">
+      <button id="btnNext">نداء</button>
+      <button id="btnPrev">السابق</button>
+      <span class="pill" id="st">جاهز</span>
+    </div>
+
+    <div class="small" style="margin-top:10px">
+      ملاحظة: إذا ما نادت النغمة، اضغط زر (نداء) مرة واحدة لتفعيل الصوت في المتصفح.
+    </div>
+
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
 </div>
 
-<script src="/app.js?v=stable1"></script>
+<script src="/app.js"></script>
 <script>
-  var st = document.getElementById("st");
-  var num = document.getElementById("num");
-  var gender = document.getElementById("gender");
-  var btn = document.getElementById("btn");
-  var prev = document.getElementById("prev");
+  const st = document.getElementById("st");
+  const me = document.getElementById("me");
+  const num = document.getElementById("num");
+  const gender = document.getElementById("gender");
 
-  function requireStaff(){
-    var u = App.getUser();
-    if(!u){ location.href="/login/"; return false; }
-    return true;
+  const who = App.getMe();
+  me.textContent = "المستخدم: " + (who.username||"-") + " | الصلاحية: " + (who.role||"-");
+
+  if (!who.role) {
+    App.setStatus(st, "غير مسجل دخول", false);
   }
-  requireStaff();
 
-  btn.addEventListener("click", function(){
-    var n = (num.value || "").trim();
-    if(!n){ App.setStatus(st, "اكتب رقم", "warn"); return; }
-    App.setStatus(st, "جاري النداء...", "warn");
-    App.API.next(n, gender.value).then(function(r){
-      if(r && r.ok) App.setStatus(st, "تم ✅", "ok");
-      else App.setStatus(st, "فشل", "err");
-    }).catch(function(){ App.setStatus(st, "فشل", "err"); });
-  });
+  async function nextCall(){
+    try{
+      const n = (num.value||"").trim();
+      if (!n) return App.setStatus(st, "اكتب رقم المتدرب", false);
+      App.setStatus(st, "جاري النداء...", null);
+      const r = await App.API.next(n, gender.value);
+      if (!r || !r.ok) return App.setStatus(st, "فشل النداء", false);
+      App.beep();
+      App.setStatus(st, "تم النداء ✅", true);
+      num.value = "";
+      num.focus();
+    }catch(e){
+      App.setStatus(st, "فشل النداء", false);
+    }
+  }
 
-  prev.addEventListener("click", function(){
-    App.setStatus(st, "رجوع...", "warn");
-    App.API.prev().then(function(r){
-      if(r && r.ok) App.setStatus(st, "تم ✅", "ok");
-      else App.setStatus(st, "فشل", "err");
-    }).catch(function(){ App.setStatus(st, "فشل", "err"); });
-  });
+  async function prevCall(){
+    try{
+      App.setStatus(st, "رجوع...", null);
+      const r = await App.API.prev();
+      App.setStatus(st, (r && r.ok) ? "تم ✅" : "فشل", !!(r && r.ok));
+    }catch(e){
+      App.setStatus(st, "فشل", false);
+    }
+  }
+
+  document.getElementById("btnNext").addEventListener("click", nextCall);
+  document.getElementById("btnPrev").addEventListener("click", prevCall);
 </script>
 </body>
 </html>

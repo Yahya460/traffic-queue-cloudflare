@@ -1,91 +1,136 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<title>شاشة العرض</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{
-  margin:0;
-  font-family: system-ui;
-  background:#0f172a;
-  color:white;
-}
-header{
-  background:#111827;
-  padding:15px;
-  text-align:center;
-}
-header img{
-  height:60px;
-}
-main{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-  padding:10px;
-}
-.col{
-  background:#1f2933;
-  border-radius:12px;
-  padding:10px;
-  min-height:300px;
-}
-h2{text-align:center}
-#centerImage{
-  width:100%;
-  max-height:400px;
-  object-fit:contain;
-}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>شاشة العرض</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .board{display:grid;gap:12px;grid-template-columns:1fr 1.2fr 1fr}
+    @media (max-width:900px){.board{grid-template-columns:1fr}}
+    .colTitle{font-weight:900;margin-bottom:8px}
+    .box2{border:1px solid rgba(15,23,42,.15);border-radius:16px;padding:12px;background:#fff}
+    .big{font-size:56px;font-weight:1000;text-align:center;margin:8px 0}
+    .muted{color:#475569;font-size:13px}
+    .list2{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+    .item{display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(15,23,42,.12);border-radius:14px;padding:10px;background:rgba(2,6,23,.02)}
+    .num{font-size:22px;font-weight:1000}
+    .time{font-size:12px;color:#64748b}
+    .hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  </style>
 </head>
-
 <body>
+<div class="container">
+  <div class="card">
+    <div class="hdr">
+      <div class="row">
+        <img src="/logo.png" alt="logo" style="width:52px;height:52px;border-radius:14px;border:1px solid rgba(15,23,42,.15);padding:6px;object-fit:contain" onerror="this.style.display='none'">
+        <div>
+          <div class="h1">شاشة العرض</div>
+          <div class="small">نظام الدور الآلي لمعلمين السياقة – معهد السلامة المرورية صحار</div>
+        </div>
+      </div>
+      <span class="pill" id="st">Connecting…</span>
+    </div>
 
-<header>
-  <img src="/logo.png" alt="شعار المعهد">
-  <h1>شاشة العرض – معلمي السياقة</h1>
-</header>
+    <hr>
 
-<main>
-  <div class="col">
-    <h2>تم النداء (رجال)</h2>
-    <div id="men"></div>
+    <div class="box2">
+      <div class="muted">الرقم الحالي</div>
+      <div class="big" id="current">—</div>
+      <div class="muted" id="by">—</div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="board">
+      <div class="box2">
+        <div class="colTitle">رجال – تم النداء</div>
+        <ul class="list2" id="male"></ul>
+      </div>
+
+      <div class="box2">
+        <div class="colTitle">جميع النداءات (الوقت)</div>
+        <ul class="list2" id="all"></ul>
+      </div>
+
+      <div class="box2">
+        <div class="colTitle">نساء – تم النداء</div>
+        <ul class="list2" id="female"></ul>
+      </div>
+    </div>
+
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
+</div>
 
-  <div class="col">
-    <h2>الشاشة الرئيسية</h2>
-    <img id="centerImage" src="" alt="">
-  </div>
-
-  <div class="col">
-    <h2>تم النداء (نساء)</h2>
-    <div id="women"></div>
-  </div>
-</main>
-
-<audio id="beep" src="/beep.mp3"></audio>
-
+<script src="/app.js"></script>
 <script>
-async function load(){
-  const res = await fetch("/api/state");
-  const data = await res.json();
+  const st = document.getElementById("st");
+  const current = document.getElementById("current");
+  const byEl = document.getElementById("by");
+  const ulMale = document.getElementById("male");
+  const ulFem  = document.getElementById("female");
+  const ulAll  = document.getElementById("all");
 
-  // صورة الوسط
-  if(data.centerImage){
-    document.getElementById("centerImage").src = data.centerImage;
+  let lastKey = "";
+
+  function fmtTime(ts){
+    if (!ts) return "";
+    try { return new Date(ts).toLocaleString("ar-OM"); } catch(e){ return String(ts); }
   }
 
-  // رجال / نساء
-  document.getElementById("men").innerHTML =
-    (data.calledMen||[]).map(x=>${x.number} - ${x.time}).join("<br>");
+  function liItem(n, ts){
+    const li = document.createElement("li");
+    li.className = "item";
+    li.innerHTML = <div class="num">${n}</div><div class="time">${fmtTime(ts)}</div>;
+    return li;
+  }
 
-  document.getElementById("women").innerHTML =
-    (data.calledWomen||[]).map(x=>${x.number} - ${x.time}).join("<br>");
-}
+  function renderList(el, arr){
+    el.innerHTML = "";
+    (arr || []).slice(0, 15).forEach(x=>{
+      el.appendChild(liItem(x.number, x.at));
+    });
+  }
 
-setInterval(load,2000);
+  async function tick(){
+    try{
+      const r = await App.API.state();
+      if (!r || !r.ok) return App.setStatus(st, "API غير متصل", false);
+
+      App.setStatus(st, "متصل ✅", true);
+
+      // نتوقع state فيه current + history
+      const cur = r.current || r.now || null;
+      if (cur && cur.number){
+        current.textContent = cur.number;
+        byEl.textContent = (cur.by ? ("نادى: " + cur.by) : "") + (cur.at ? (" | " + fmtTime(cur.at)) : "");
+        const key = String(cur.number) + "|" + String(cur.at||"");
+        if (key && key !== lastKey){
+          lastKey = key;
+          App.beep();
+        }
+      }else{
+        current.textContent = "—";
+        byEl.textContent = "Waiting…";
+      }
+
+      const hist = (r.history || r.calls || r.log || []);
+      const males = hist.filter(x=>x.gender==="male");
+      const females = hist.filter(x=>x.gender==="female");
+
+      renderList(ulMale, males);
+      renderList(ulFem, females);
+      renderList(ulAll, hist);
+
+    }catch(e){
+      App.setStatus(st, "API غير متصل", false);
+    }
+  }
+
+  tick();
+  setInterval(tick, 1500);
 </script>
-
 </body>
 </html>
