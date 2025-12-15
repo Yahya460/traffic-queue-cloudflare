@@ -291,7 +291,7 @@ export class QueueDO {
 export default {
   async fetch(request, env) {
     // use a fixed id so all pages share the same state
-    const id = env.QUEUE_DO.idFromName("main");
+    const id = env["traffic-queue-do-v3_QueueDO"].idFromName("main");
     const stub = env.QUEUE_DO.get(id);
     return stub.fetch(request);
   }
