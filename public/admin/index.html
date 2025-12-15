@@ -1,21 +1,34 @@
-<button onclick="sendImage()">إرسال الصورة للشاشة</button>
-<input type="file" id="img" accept="image/*">
+<hr>
+
+<h3>إرسال صورة إلى شاشة العرض (Base64)</h3>
+
+<input type="file" id="imgInput" accept="image/*">
+<br><br>
+<button onclick="sendImage()">إرسال الصورة</button>
 
 <script>
 async function sendImage(){
-  const f = document.getElementById("img").files[0];
-  if(!f) return alert("اختر صورة");
+  const file = document.getElementById("imgInput").files[0];
+  if(!file){
+    alert("اختر صورة أولًا");
+    return;
+  }
 
-  const r = new FileReader();
-  r.onload = async () => {
-    const res = await fetch("/api/center-image",{
-      method:"POST",
-      headers:{ "content-type":"application/json" },
-      body: JSON.stringify({ image:r.result })
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const res = await fetch("/api/center-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: reader.result })
     });
+
     const j = await res.json();
-    alert(j.ok ? "تم الإرسال" : "فشل");
+    if(j.ok){
+      alert("تم إرسال الصورة للشاشة ✅");
+    }else{
+      alert("فشل الإرسال ❌");
+    }
   };
-  r.readAsDataURL(f);
+  reader.readAsDataURL(file);
 }
 </script>
