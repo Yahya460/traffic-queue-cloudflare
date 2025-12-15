@@ -1,124 +1,61 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>تسجيل الدخول</title>
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:#fff;color:#0b1220}
-    .wrap{max-width:900px;margin:0 auto;padding:18px}
-    .card{border:1px solid rgba(15,23,42,.15);border-radius:18px;padding:16px;background:rgba(15,23,42,.03)}
-    .head{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:54px;height:54px;border-radius:16px;border:1px solid rgba(15,23,42,.15);background:#fff;object-fit:contain;padding:6px}
-    .title{font-weight:900;font-size:18px}
-    .sub{color:#475569;font-size:13px;line-height:1.5}
-    .status{padding:6px 10px;border:1px solid rgba(15,23,42,.15);border-radius:999px;background:#fff;font-size:12px;color:#334155}
-    .grid{display:grid;gap:12px}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:860px){.row2{grid-template-columns:1fr}}
-    label{font-size:13px;color:#475569}
-    input{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(15,23,42,.15);background:#fff;font-size:16px}
-    button{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(37,99,235,.25);background:rgba(37,99,235,.10);cursor:pointer;font-weight:900;font-size:16px}
-    button:hover{filter:brightness(.98)}
-    .links{margin-top:10px;font-size:13px;color:#475569}
-    .links a{color:#2563eb}
-    .foot{margin-top:16px;text-align:center;color:#64748b;font-size:13px}
-  </style>
+  <title>Login</title>
+  <link rel="stylesheet" href="/styles.css"/>
 </head>
 <body>
   <div class="wrap">
-    <div class="head">
-      <div class="brand">
-        <img class="logo" src="/logo.png" alt="شعار"/>
-        <div>
-          <div class="title">تسجيل دخول المدير / الفاحص</div>
-          <div class="sub">نظام الدور الآلي – معهد السلامة المرورية صحار</div>
-        </div>
-      </div>
-      <div class="status" id="status">جاهز</div>
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">Login</h2>
+      <span class="pill" id="status">Ready</span>
     </div>
 
     <div class="card">
       <div class="grid">
-        <div class="row2">
+        <div class="grid grid2">
           <div>
-            <label>اسم المستخدم</label>
-            <input id="u" autocomplete="username" placeholder="مثال: يوسف أو خالد"/>
+            <small>Username</small>
+            <input id="u" autocomplete="username" placeholder="yusuf / khalid ..."/>
           </div>
           <div>
-            <label>كلمة المرور</label>
+            <small>Password</small>
             <input id="p" type="password" autocomplete="current-password" placeholder="••••••••"/>
           </div>
         </div>
 
-        <button id="btn">دخول</button>
+        <button id="btn">Login</button>
 
-        <div class="links">
-          روابط الصفحات:
-          <ul>
-            <li><a href="/display/">شاشة العرض</a></li>
-            <li><a href="/staff/">شاشة الفاحص</a></li>
-            <li><a href="/admin/">لوحة المدير</a></li>
-          </ul>
-        </div>
+        <small>
+          Default admin: <b>yusuf / 2626</b><br/>
+          Links: <a href="/staff/">Staff</a> • <a href="/admin/">Admin</a> • <a href="/display/">Display</a>
+        </small>
       </div>
     </div>
-
-    <div class="foot">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
 
-  <!-- مهم: app.js لازم يكون قبل كود الدخول -->
-  <script src="/app.js?v=loginfix"></script>
-
+  <script src="/app.js"></script>
   <script>
-    var statusEl = document.getElementById("status");
-    var u = document.getElementById("u");
-    var p = document.getElementById("p");
-    var btn = document.getElementById("btn");
+    const statusEl = App.$("#status");
+    const u = App.$("#u");
+    const p = App.$("#p");
+    const btn = App.$("#btn");
 
-    function saveSession(username, role) {
-      // نخزن بصيغة بسيطة ومتوافقة
-      localStorage.setItem("username", username || "");
-      localStorage.setItem("role", role || "");
-      // ونحفظ كـ tq_user بعد (لأي صفحات ثانية)
-      if (window.App && App.setUser) App.setUser({ username: username, role: role });
-    }
-
-    async function goLogin(){
+    async function go(){
       try{
-        App.setStatus(statusEl, "جاري الدخول...", "info");
-
-        var username = (u.value || "").trim();
-        var password = (p.value || "");
-
-        if (!username || !password){
-          App.setStatus(statusEl, "اكتب اسم المستخدم وكلمة المرور", "warn");
-          return;
-        }
-
-        var r = await App.API.login(username, password);
-
-        if (!r || !r.ok){
-          App.setStatus(statusEl, "فشل تسجيل الدخول", "err");
-          return;
-        }
-
-        saveSession(r.username, r.role);
-        App.setStatus(statusEl, "تم الدخول ✅", "ok");
-
-        // توجيه حسب الصلاحية
-        if (r.role === "admin") location.href = "/admin/";
+        App.setStatus(statusEl, "Signing in...", "info");
+        const r = await App.API.login(u.value.trim(), p.value);
+        App.setStatus(statusEl, "OK ✅", "ok");
+        if(r.role === "admin") location.href = "/admin/";
         else location.href = "/staff/";
-
       }catch(e){
-        App.setStatus(statusEl, "خطأ: " + (e && e.message ? e.message : e), "err");
+        App.setStatus(statusEl, "Failed: " + e.message, "err");
       }
     }
-
-    btn.addEventListener("click", goLogin);
-    p.addEventListener("keydown", function(ev){ if(ev.key==="Enter") goLogin(); });
+    btn.addEventListener("click", go);
+    p.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") go(); });
   </script>
 </body>
 </html>
