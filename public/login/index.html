@@ -6,10 +6,21 @@
   <title>Login</title>
   <style>
 :root{
-  --bg:#ffffff; --text:#0b1220; --muted:#4b5563;
-  --card:rgba(15, 23, 42, 0.04); --line:rgba(15, 23, 42, 0.12);
-  --blue:#2563eb; --red:#dc2626; --black:#111827;
-  --blueBg:rgba(37,99,235,.09); --shadow:0 14px 30px rgba(2,6,23,.08);
+  --bg:#ffffff;
+  --text:#0b1220;
+  --muted:#4b5563;
+  --card:rgba(15, 23, 42, 0.04);
+  --line:rgba(15, 23, 42, 0.12);
+
+  --blue:#2563eb;
+  --red:#dc2626;
+  --black:#111827;
+
+  --blueBg:rgba(37,99,235,.09);
+  --redBg:rgba(220,38,38,.09);
+  --blkBg:rgba(17,24,39,.06);
+
+  --shadow:0 14px 30px rgba(2,6,23,.08);
   --radius:18px;
 }
 *{box-sizing:border-box}
@@ -19,20 +30,22 @@ a{color:var(--blue)}
 .header{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .brand{display:flex;gap:12px;align-items:center}
 .logo{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);background:rgba(2,6,23,.02);object-fit:contain;padding:6px;}
-.title{font-weight:900;font-size:20px;color:var(--black)}
+.title{font-weight:1100;font-size:20px;color:var(--black)}
 .subtitle{font-size:13px;color:var(--muted);line-height:1.5}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;backdrop-filter:saturate(140%) blur(2px);}
 .grid{display:grid;gap:14px}
 .grid2{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
-input,button{font-family:inherit;font-size:16px}
-input{width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--black);outline:none;}
-button{padding:12px 14px;border-radius:16px;border:1px solid rgba(37,99,235,.22);background:rgba(37,99,235,.09);color:var(--black);cursor:pointer;font-weight:900;display:inline-flex;align-items:center;gap:10px;justify-content:center;}
-button:disabled{opacity:.55;cursor:not-allowed}
+input,select,textarea,button{font-family:inherit;font-size:16px}
+input,select,textarea{width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--black);outline:none;}
+button{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--blueBg);color:var(--black);cursor:pointer;font-weight:1100;display:inline-flex;align-items:center;gap:10px;justify-content:center;}
+button:hover{filter:brightness(.98)}
+button.blue{background:var(--blueBg);border-color:rgba(37,99,235,.22)}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.65);font-size:12px;color:var(--muted);}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.65);font-size:12px;color:var(--muted);}
 .ico{width:18px;height:18px;display:inline-block}
+.ico.black{color:var(--black);opacity:.85}
   </style>
 </head>
 <body>
@@ -41,7 +54,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <div class="brand">
       <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
       <div>
-        <div class="title">تسجيل الدخول (الفاحص / المدير)</div>
+        <div class="title">تسجيل الدخول (فاحص / مدير)</div>
         <div class="subtitle">نظام الدور الآلي لمعلمين السياقة – معهد السلامة المرورية صحار</div>
       </div>
     </div>
@@ -61,7 +74,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
         </div>
       </div>
 
-      <button id="btn">دخول</button>
+      <button class="blue" id="btn"><span id="icoLogin"></span>دخول</button>
 
       <div class="small">
         <div>روابط الصفحات:</div>
@@ -77,7 +90,15 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
 </div>
 
-<!-- مهم: تحميل app.js قبل كود الدخول -->
+<script>
+  const I = {
+    users:(c="black")=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+      <path d="M12 11a4 4 0 100-8 4 4 0 000 8z"></path></svg>`,
+  };
+  document.getElementById("icoLogin").innerHTML = I.users("black");
+</script>
+
 <script src="/app.js?v=fix100"></script>
 
 <script>
@@ -88,29 +109,23 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
   async function go(){
     try{
-      if(!window.App || !App.API) throw new Error("app.js لم يتم تحميله");
-      App.setStatus(statusEl, "جاري الدخول...", "info");
-      btn.disabled = true;
+      App.setStatus(statusEl, "جاري الدخول...");
 
       const r = await App.API.login(u.value.trim(), p.value);
 
-      if(!r || r.ok === false) {
+      if (!r || r.ok !== true || !r.user) {
         throw new Error(r?.error || "فشل تسجيل الدخول");
       }
 
-      // حفظ التوكن/اليوزر بنفس مفاتيح app.js
-      if (r.token) App.setToken(r.token);
-      App.setUser({ username: r.user?.username || r.username || u.value.trim(), role: r.user?.role || r.role || "staff" });
+      // خزّن المستخدم بالطريقة الصحيحة
+      App.setUser({ username: r.user.username, role: r.user.role });
 
-      const role = (r.user?.role || r.role || "staff").toLowerCase();
-      App.setStatus(statusEl, "تم الدخول ✅", "ok");
+      App.setStatus(statusEl, "تم الدخول ✅");
 
-      if(role === "admin") location.href = "/admin/";
+      if (r.user.role === "admin") location.href = "/admin/";
       else location.href = "/staff/";
     }catch(e){
-      App.setStatus(statusEl, "فشل: " + (e?.message || e), "error");
-    }finally{
-      btn.disabled = false;
+      App.setStatus(statusEl, "فشل: " + e.message, "error");
     }
   }
 

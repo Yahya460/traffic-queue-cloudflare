@@ -1,5 +1,4 @@
-/* traffic-queue-cloudflare - public/app.js (STABLE) */
-/* يعرّف window.App ويمنع أخطاء: App is not defined / setStatus missing */
+/* traffic-queue-cloudflare - public/app.js (FIXED 100%) */
 
 (() => {
   "use strict";
@@ -40,7 +39,6 @@
     else localStorage.removeItem(LS_USER);
   }
 
-  // شريط الحالة
   function setStatus(el, msg = "", kind = "info") {
     if (!el) return;
     el.textContent = msg || "";
@@ -61,7 +59,6 @@
       return fetchJson(path, opts);
     },
 
-    // ---- Auth ----
     login(username, password) {
       return this.request("/api/login", {
         method: "POST",
@@ -74,10 +71,7 @@
       return this.request("/api/logout", { method: "POST" });
     },
 
-    // ---- Queue ----
-    state() {
-      return this.request("/api/state");
-    },
+    state() { return this.request("/api/state"); },
 
     next(number, gender) {
       return this.request("/api/next", {
@@ -87,15 +81,10 @@
       });
     },
 
-    prev() {
-      return this.request("/api/prev", { method: "POST" });
-    },
+    prev() { return this.request("/api/prev", { method: "POST" }); },
 
-    resetQueue() {
-      return this.request("/api/queue/reset", { method: "POST" });
-    },
+    resetQueue() { return this.request("/api/queue/reset", { method: "POST" }); },
 
-    // ---- Display message (العمود الأوسط) ----
     setDisplayMessage(text, active = true) {
       return this.request("/api/display-message", {
         method: "POST",
@@ -104,15 +93,10 @@
       });
     },
 
-    clearDisplayMessage() {
-      return this.request("/api/display-message/clear", { method: "POST" });
-    },
+    clearDisplayMessage() { return this.request("/api/display-message/clear", { method: "POST" }); },
 
-    pingDisplay() {
-      return this.request("/api/display/ping", { method: "POST" });
-    },
+    pingDisplay() { return this.request("/api/display/ping", { method: "POST" }); },
 
-    // ---- Ticker (الشريط الأصفر) ----
     setTicker(text) {
       return this.request("/api/ticker", {
         method: "POST",
@@ -121,13 +105,10 @@
       });
     },
 
-    clearTicker() {
-      return this.request("/api/ticker/clear", { method: "POST" });
-    },
+    clearTicker() { return this.request("/api/ticker/clear", { method: "POST" }); },
 
     sendTicker(text) { return this.setTicker(text); },
 
-    // ---- Messages ----
     toAdmin(text) {
       return this.request("/api/message/to-admin", {
         method: "POST",
@@ -147,10 +128,7 @@
     sendToAdmin(text) { return this.toAdmin(text); },
     sendStaffMessage(to, text) { return this.toStaff(to, text); },
 
-    // ---- Users ----
-    usersList() {
-      return this.request("/api/users");
-    },
+    usersList() { return this.request("/api/users"); },
 
     usersAdd(bodyOrUsername, password, role = "staff") {
       const body = (typeof bodyOrUsername === "object" && bodyOrUsername)
@@ -182,9 +160,7 @@
     resetPassword(username, password) { return this.usersResetPassword(username, password); }
   };
 
-  function go(path) {
-    window.location.href = path;
-  }
+  function go(path) { window.location.href = path; }
 
   function fmtHHMM(ts) {
     if (!ts) return "";
@@ -199,7 +175,6 @@
     try { return new Date(ts).toLocaleString("ar-OM"); } catch { return String(ts); }
   }
 
-  // expose
   window.App = { API, token, setToken, getUser, setUser, setStatus, go, fmtTime, fmtHHMM };
-  window.setStatus = setStatus; // توافق مع أي كود قديم
+  window.setStatus = setStatus;
 })();
