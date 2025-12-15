@@ -19,7 +19,7 @@ a{color:var(--blue)}
 .header{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .brand{display:flex;gap:12px;align-items:center}
 .logo{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);background:rgba(2,6,23,.02);object-fit:contain;padding:6px;}
-.title{font-weight:1100;font-size:20px;color:var(--black)}
+.title{font-weight:900;font-size:20px;color:var(--black)}
 .subtitle{font-size:13px;color:var(--muted);line-height:1.5}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;}
 .grid{display:grid;gap:14px}
@@ -27,21 +27,21 @@ a{color:var(--blue)}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 input,button{font-family:inherit;font-size:16px}
 input{width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--black);outline:none;}
-button{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--blueBg);color:var(--black);cursor:pointer;font-weight:1100;display:inline-flex;align-items:center;gap:10px;justify-content:center;}
+button{padding:12px 14px;border-radius:16px;border:1px solid rgba(37,99,235,.22);background:rgba(37,99,235,.09);color:var(--black);cursor:pointer;font-weight:900;display:inline-flex;align-items:center;gap:10px;justify-content:center;}
 button:disabled{opacity:.55;cursor:not-allowed}
 .small{font-size:13px;color:var(--muted);line-height:1.6}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.65);font-size:12px;color:var(--muted);}
 .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+.ico{width:18px;height:18px;display:inline-block}
   </style>
 </head>
-
 <body>
 <div class="container">
   <div class="header">
     <div class="brand">
       <img class="logo" src="/logo.png" alt="شعار معهد السلامة المرورية"/>
       <div>
-        <div class="title">خاص بتسجيل دخول الفاحص / المدير</div>
+        <div class="title">تسجيل الدخول (الفاحص / المدير)</div>
         <div class="subtitle">نظام الدور الآلي لمعلمين السياقة – معهد السلامة المرورية صحار</div>
       </div>
     </div>
@@ -77,49 +77,38 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
 </div>
 
+<!-- مهم: تحميل app.js قبل كود الدخول -->
+<script src="/app.js?v=fix100"></script>
+
 <script>
   const statusEl = document.getElementById("status");
   const u = document.getElementById("u");
   const p = document.getElementById("p");
   const btn = document.getElementById("btn");
 
-  function setStatus(msg, ok=true){
-    statusEl.textContent = msg;
-    statusEl.style.color = ok ? "#065f46" : "#991b1b";
-    statusEl.style.borderColor = ok ? "rgba(6,95,70,.25)" : "rgba(153,27,27,.25)";
-  }
-
-  async function login(username, password){
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json().catch(()=>({ok:false,error:"BAD_JSON"}));
-    if(!res.ok || !data.ok) throw new Error(data.error || "LOGIN_FAILED");
-    return data;
-  }
-
   async function go(){
-    btn.disabled = true;
     try{
-      setStatus("جاري الدخول...");
-      const data = await login(u.value.trim(), p.value);
+      if(!window.App || !App.API) throw new Error("app.js لم يتم تحميله");
+      App.setStatus(statusEl, "جاري الدخول...", "info");
+      btn.disabled = true;
 
-      // يدعم الشكلين: user أو username/role
-      const user = data.user || { username: data.username, role: data.role };
-      const role = user.role || "staff";
+      const r = await App.API.login(u.value.trim(), p.value);
 
-      localStorage.setItem("username", user.username || "");
-      localStorage.setItem("role", role);
+      if(!r || r.ok === false) {
+        throw new Error(r?.error || "فشل تسجيل الدخول");
+      }
 
-      setStatus("تم الدخول ✅");
+      // حفظ التوكن/اليوزر بنفس مفاتيح app.js
+      if (r.token) App.setToken(r.token);
+      App.setUser({ username: r.user?.username || r.username || u.value.trim(), role: r.user?.role || r.role || "staff" });
 
-      // تحويل حسب الدور
+      const role = (r.user?.role || r.role || "staff").toLowerCase();
+      App.setStatus(statusEl, "تم الدخول ✅", "ok");
+
       if(role === "admin") location.href = "/admin/";
       else location.href = "/staff/";
     }catch(e){
-      setStatus("فشل: " + e.message, false);
+      App.setStatus(statusEl, "فشل: " + (e?.message || e), "error");
     }finally{
       btn.disabled = false;
     }
