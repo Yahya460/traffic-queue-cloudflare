@@ -186,4 +186,78 @@
     loadUsers();
   </script>
 </body>
-</html>
+</html><hr>
+<h3>📷 صورة تُعرض في شاشة العرض (صلاحية المدير فقط)</h3>
+
+<input id="imgFile" type="file" accept="image/*">
+<button id="btnSendImg">📤 إرسال الصورة</button>
+<button id="btnClearImg">🧹 مسح الصورة</button>
+
+<br><br>
+
+<button id="btnCam">فتح الكاميرا</button>
+<button id="btnSnap" disabled>التقاط وإرسال</button>
+
+<br><br>
+<video id="cam" autoplay playsinline style="width:260px; border:1px solid #ccc; border-radius:12px; display:none;"></video>
+<canvas id="cv" style="display:none;"></canvas>
+
+<script>
+  const imgFile = document.getElementById("imgFile");
+  const btnSendImg = document.getElementById("btnSendImg");
+  const btnClearImg = document.getElementById("btnClearImg");
+  const btnCam = document.getElementById("btnCam");
+  const btnSnap = document.getElementById("btnSnap");
+  const cam = document.getElementById("cam");
+  const cv = document.getElementById("cv");
+
+  let stream = null;
+
+  function fileToDataUrl(file){
+    return new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = ()=> resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  btnSendImg.onclick = async () => {
+    if(!imgFile.files[0]) return alert("اختر صورة أولاً");
+    const dataUrl = await fileToDataUrl(imgFile.files[0]);
+    const r = await App.API.setDisplayImage(dataUrl);
+    if(!r.ok) return alert("فشل الإرسال: " + (r.error || r._status));
+    alert("تم إرسال الصورة لشاشة العرض ✅");
+  };
+
+  btnClearImg.onclick = async () => {
+    const r = await App.API.clearDisplayImage();
+    if(!r.ok) return alert("فشل المسح: " + (r.error || r._status));
+    alert("تم مسح الصورة ✅");
+  };
+
+  btnCam.onclick = async () => {
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      cam.srcObject = stream;
+      cam.style.display = "block";
+      btnSnap.disabled = false;
+    }catch(e){
+      alert("تعذر فتح الكاميرا: " + e.message);
+    }
+  };
+
+  btnSnap.onclick = async () => {
+    if(!stream) return;
+    const w = cam.videoWidth || 640;
+    const h = cam.videoHeight || 480;
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext("2d");
+    ctx.drawImage(cam, 0, 0, w, h);
+    const dataUrl = cv.toDataURL("image/jpeg", 0.85);
+
+    const r = await App.API.setDisplayImage(dataUrl);
+    if(!r.ok) return alert("فشل الإرسال: " + (r.error || r._status));
+    alert("تم إرسال الصورة ✅");
+  };
+</script>

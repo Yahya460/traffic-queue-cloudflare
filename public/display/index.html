@@ -1,4 +1,4 @@
-<!doctype html>
+<img id="displayImg" style="max-width:100%; max-height:260px; border:1px solid rgba(0,0,0,.15); border-radius:14px; display:none;"><!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -32,7 +32,26 @@
       <img id="img" alt="" style="display:none"/>
       <div id="imgEmpty" style="opacity:.6">No image</div>
     </div>
-  </div>
+ <script src="/app.js?v=disp"></script>
+<script>
+  const displayImg = document.getElementById("displayImg");
+
+  async function refresh(){
+    const s = await App.API.state();
+    if(!s || !s.ok) return;
+
+    if(s.displayImage){
+      displayImg.src = s.displayImage;
+      displayImg.style.display = "block";
+    }else{
+      displayImg.src = "";
+      displayImg.style.display = "none";
+    }
+  }
+
+  refresh();
+  setInterval(refresh, 1000); // ✅ هذا اللي يخلي الصفحات تتجاوب
+</script> </div>
 
   <div class="ticker" id="ticker"></div>
 

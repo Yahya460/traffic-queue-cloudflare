@@ -1,8 +1,6 @@
 import { sha256 } from "./utils.js";
 
-function nowIso() {
-  return new Date().toISOString();
-}
+function nowIso() { return new Date().toISOString(); }
 
 function makeToken() {
   const a = new Uint8Array(24);
@@ -18,17 +16,15 @@ export class QueueDO {
   }
 
   async ensureSchema() {
-    // users
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS users (
         username TEXT PRIMARY KEY,
         passhash TEXT NOT NULL,
-        role     TEXT NOT NULL,
+        role TEXT NOT NULL,
         created_at TEXT NOT NULL
       )
     `);
 
-    // sessions
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS sessions (
         token TEXT PRIMARY KEY,
@@ -40,53 +36,37 @@ export class QueueDO {
   }
 
   async ensureDefaults() {
-    // ✅ Admin: يوسف / 2626
-    const adminExists = this.sql
-      .exec("SELECT 1 FROM users WHERE username = ?", "يوسف")
-      .toArray();
-
-    if (!adminExists.length) {
-      const hash = await sha256("2626");
+    // مدير افتراضي: yusuf / 2626
+    const a = this.sql.exec("SELECT 1 FROM users WHERE username = ?", "yusuf").toArray();
+    if (!a.length) {
+      const h = await sha256("2626");
       this.sql.exec(
         "INSERT INTO users (username, passhash, role, created_at) VALUES (?,?,?,?)",
-        "يوسف",
-        hash,
-        "admin",
-        nowIso()
+        "yusuf", h, "admin", nowIso()
       );
     }
 
-    // ✅ Staff: خالد / 1234 (اختياري لكن مفيد للاختبار)
-    const staffExists = this.sql
-      .exec("SELECT 1 FROM users WHERE username = ?", "خالد")
-      .toArray();
-
-    if (!staffExists.length) {
-      const hash = await sha256("1234");
+    // موظف تجريبي: khalid / 1234
+    const s = this.sql.exec("SELECT 1 FROM users WHERE username = ?", "khalid").toArray();
+    if (!s.length) {
+      const h = await sha256("1234");
       this.sql.exec(
         "INSERT INTO users (username, passhash, role, created_at) VALUES (?,?,?,?)",
-        "خالد",
-        hash,
-        "staff",
-        nowIso()
+        "khalid", h, "staff", nowIso()
       );
     }
   }
 
   getAuthToken(request) {
-    const h = request.headers.get("authorization") || request.headers.get("Authorization") || "";
+    const h = request.headers.get("Authorization") || request.headers.get("authorization") || "";
     const m = h.match(/^Bearer\s+(.+)$/i);
     return m ? m[1].trim() : "";
   }
 
-  requireAuth(request) {
+  authUser(request) {
     const t = this.getAuthToken(request);
     if (!t) return null;
-
-    const row = this.sql
-      .exec("SELECT token, username, role FROM sessions WHERE token = ?", t)
-      .toArray()[0];
-
+    const row = this.sql.exec("SELECT token, username, role FROM sessions WHERE token = ?", t).toArray()[0];
     return row || null;
   }
 
@@ -104,105 +84,82 @@ export class QueueDO {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // 🩺 Health
-    if (path === "/api/health") {
-      return this.json({ ok: true });
-    }
+    // ✅ health
+    if (path === "/api/health") return this.json({ ok: true });
 
-    // 🔐 Login
+    // ✅ login
     if (path === "/api/login" && request.method === "POST") {
-      let body;
-      try { body = await request.json(); } catch { body = {}; }
+      let body = {};
+      try { body = await request.json(); } catch {}
 
-      const username = (body.username || "").trim();
-      const password = (body.password || "");
+      const username = String(body.username || "").trim();
+      const password = String(body.password || "");
 
-      if (!username || !password) {
-        return this.json({ ok: false, error: "MISSING_FIELDS" }, 400);
-      }
+      if (!username || !password) return this.json({ ok: false, error: "MISSING_FIELDS" }, 400);
 
-      const row = this.sql
-        .exec("SELECT username, passhash, role FROM users WHERE username = ?", username)
-        .toArray()[0];
+      const row = this.sql.exec(
+        "SELECT username, passhash, role FROM users WHERE username = ?",
+        username
+      ).toArray()[0];
 
       if (!row) return this.json({ ok: false, error: "INVALID_LOGIN" }, 401);
 
-      const hash = await sha256(password);
-      if (hash !== row.passhash) return this.json({ ok: false, error: "INVALID_LOGIN" }, 401);
+      const h = await sha256(password);
+      if (h !== row.passhash) return this.json({ ok: false, error: "INVALID_LOGIN" }, 401);
 
-      // اصدار توكن جديد وتخزينه
       const token = makeToken();
       this.sql.exec(
         "INSERT INTO sessions (token, username, role, created_at) VALUES (?,?,?,?)",
-        token,
-        row.username,
-        row.role,
-        nowIso()
+        token, row.username, row.role, nowIso()
       );
 
-      return this.json({
-        ok: true,
-        token,
-        user: { username: row.username, role: row.role },
-      });
+      return this.json({ ok: true, token, user: { username: row.username, role: row.role } });
     }
 
-    // 🚪 Logout
+    // ✅ logout
     if (path === "/api/logout" && request.method === "POST") {
       const t = this.getAuthToken(request);
       if (t) this.sql.exec("DELETE FROM sessions WHERE token = ?", t);
       return this.json({ ok: true });
     }
 
-    // 👥 Users list (ADMIN فقط)
-    if (path === "/api/users" && request.method === "GET") {
-      const auth = this.requireAuth(request);
-      if (!auth) return this.json({ ok: false, error: "UNAUTHORIZED" }, 401);
-      if (auth.role !== "admin") return this.json({ ok: false, error: "FORBIDDEN" }, 403);
-
-      const rows = this.sql
-        .exec("SELECT username, role, created_at FROM users ORDER BY created_at DESC")
-        .toArray();
-
-      return this.json({ ok: true, users: rows });
+    // ✅ state (شاشة العرض تسحب منه)
+    if (path === "/api/state" && request.method === "GET") {
+      const img = await this.ctx.storage.get("displayImage");
+      const imgAt = await this.ctx.storage.get("displayImageAt");
+      return this.json({ ok: true, displayImage: img || "", displayImageAt: imgAt || "" });
     }
 
-    // ➕ Add user (ADMIN فقط)
-    if (path === "/api/users" && request.method === "POST") {
-      const auth = this.requireAuth(request);
+    // ✅ Admin فقط: إرسال صورة لشاشة العرض
+    if (path === "/api/admin/display-image" && request.method === "POST") {
+      const auth = this.authUser(request);
       if (!auth) return this.json({ ok: false, error: "UNAUTHORIZED" }, 401);
       if (auth.role !== "admin") return this.json({ ok: false, error: "FORBIDDEN" }, 403);
 
-      let body;
-      try { body = await request.json(); } catch { body = {}; }
+      let body = {};
+      try { body = await request.json(); } catch {}
 
-      const username = (body.username || "").trim();
-      const password = (body.password || "");
-      const role = (body.role || "").trim(); // admin / staff
-
-      if (!username || !password || !role) {
-        return this.json({ ok: false, error: "MISSING_FIELDS" }, 400);
-      }
-      if (role !== "admin" && role !== "staff") {
-        return this.json({ ok: false, error: "INVALID_ROLE" }, 400);
+      const dataUrl = String(body.dataUrl || "");
+      if (!dataUrl.startsWith("data:image/")) {
+        return this.json({ ok: false, error: "BAD_IMAGE" }, 400);
       }
 
-      const exists = this.sql.exec("SELECT 1 FROM users WHERE username = ?", username).toArray();
-      if (exists.length) return this.json({ ok: false, error: "USER_EXISTS" }, 409);
-
-      const hash = await sha256(password);
-      this.sql.exec(
-        "INSERT INTO users (username, passhash, role, created_at) VALUES (?,?,?,?)",
-        username,
-        hash,
-        role,
-        nowIso()
-      );
-
+      await this.ctx.storage.put("displayImage", dataUrl);
+      await this.ctx.storage.put("displayImageAt", nowIso());
       return this.json({ ok: true });
     }
 
-    // ❌ Not found
+    // ✅ Admin فقط: مسح الصورة
+    if (path === "/api/admin/display-image/clear" && request.method === "POST") {
+      const auth = this.authUser(request);
+      if (!auth) return this.json({ ok: false, error: "UNAUTHORIZED" }, 401);
+      if (auth.role !== "admin") return this.json({ ok: false, error: "FORBIDDEN" }, 403);
+
+      await this.ctx.storage.delete("displayImage");
+      await this.ctx.storage.put("displayImageAt", nowIso());
+      return this.json({ ok: true });
+    }
+
     return this.json({ ok: false, error: "NOT_FOUND" }, 404);
   }
 }
