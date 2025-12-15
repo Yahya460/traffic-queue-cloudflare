@@ -1,69 +1,122 @@
-(function(){
+/* public/app.js - Stable window.App (Cloudflare Pages + DO API) */
+(function () {
   "use strict";
 
-  const LS_TOKEN = "tq_token";
-  const LS_USER  = "tq_user";
+  var LS_TOKEN = "tq_token";
+  var LS_USER  = "tq_user";
 
-  function safeJsonParse(t){ try { return JSON.parse(t); } catch { return null; } }
+  function safeJsonParse(txt) { try { return JSON.parse(txt); } catch (e) { return null; } }
 
-  function setToken(t){
-    if (t) localStorage.setItem(LS_TOKEN, t);
-    else localStorage.removeItem(LS_TOKEN);
-  }
-  function token(){ return localStorage.getItem(LS_TOKEN) || ""; }
-
-  function setUser(u){
-    if (u) localStorage.setItem(LS_USER, JSON.stringify(u));
-    else localStorage.removeItem(LS_USER);
-  }
-  function getUser(){ return safeJsonParse(localStorage.getItem(LS_USER) || "null"); }
-
-  function setStatus(el, msg, kind="info"){
-    if(!el) return;
+  function setStatus(el, msg, kind) {
+    if (!el) return;
     el.textContent = msg || "";
-    el.style.color = (kind==="ok") ? "#16a34a" : (kind==="err") ? "#dc2626" : "#334155";
+    try {
+      el.style.color = "";
+      if (kind === "ok") el.style.color = "#16a34a";
+      else if (kind === "err") el.style.color = "#dc2626";
+      else if (kind === "warn") el.style.color = "#d97706";
+      else el.style.color = "#334155";
+    } catch (e) {}
   }
 
-  async function request(path, opts={}){
-    opts.headers = Object.assign({}, opts.headers || {});
-    const t = token();
+  function setToken(t) {
+    if (!t) localStorage.removeItem(LS_TOKEN);
+    else localStorage.setItem(LS_TOKEN, String(t));
+  }
+  function token() { return localStorage.getItem(LS_TOKEN) || ""; }
+
+  function setUser(u) {
+    if (!u) localStorage.removeItem(LS_USER);
+    else localStorage.setItem(LS_USER, JSON.stringify(u));
+  }
+  function getUser() { return safeJsonParse(localStorage.getItem(LS_USER) || "null"); }
+
+  function fetchJson(path, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+
+    var t = token();
     if (t) opts.headers["Authorization"] = "Bearer " + t;
 
-    const res = await fetch(path, opts);
-    const txt = await res.text();
-    const data = safeJsonParse(txt) || { ok:false, raw:txt };
-    if (!res.ok) data.ok = false;
-    data._status = res.status;
-    return data;
+    return fetch(path, opts).then(function (res) {
+      return res.text().then(function (text) {
+        var data = safeJsonParse(text);
+        if (!data || typeof data !== "object") data = { ok: false, raw: text };
+        data._status = res.status;
+        data._statusText = res.statusText;
+        if (!res.ok) data.ok = false;
+        return data;
+      });
+    });
   }
 
-  const API = {
-    async login(username, password){
-      const r = await request("/api/login", {
-        method:"POST",
-        headers:{ "content-type":"application/json; charset=utf-8" },
-        body: JSON.stringify({ username, password })
-      });
-      if(!r.ok) return r;
-      if(r.token) setToken(r.token);
-      if(r.user) setUser(r.user);
-      return r;
-    },
-    logout(){ setToken(""); setUser(null); return request("/api/logout", { method:"POST" }); },
-    state(){ return request("/api/state", { method:"GET" }); },
+  function fmtHHMM(ts) {
+    if (!ts) return "";
+    var d = new Date(ts);
+    var hh = String(d.getHours()).padStart(2, "0");
+    var mm = String(d.getMinutes()).padStart(2, "0");
+    return hh + ":" + mm;
+  }
 
-    // Admin image
-    setDisplayImage(dataUrl){
-      return request("/api/admin/display-image", {
-        method:"POST",
-        headers:{ "content-type":"application/json; charset=utf-8" },
-        body: JSON.stringify({ dataUrl })
+  var API = {
+    health: function () { return fetchJson("/api/health"); },
+    state:  function () { return fetchJson("/api/state"); },
+
+    login: function (username, password) {
+      return fetchJson("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ username: username, password: password })
+      }).then(function (r) {
+        // عندك بالسيرفر يرجع: {ok:true, token:"...", username:"...", role:"..."}
+        if (!r || !r.ok) throw new Error((r && r.error) ? r.error : "LOGIN_FAILED");
+        return r;
       });
     },
-    clearDisplayImage(){
-      return request("/api/admin/display-image/clear", { method:"POST" });
+
+    // نداء من الفاحص
+    next: function (number, gender) {
+      return fetchJson("/api/next", {
+        method: "POST",
+        headers: { "content-type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ number: number, gender: gender })
+      });
+    },
+
+    prev: function () { return fetchJson("/api/prev", { method: "POST" }); },
+
+    // رسالة المدير (الشريط أو الرسالة)
+    setTicker: function (text) {
+      return fetchJson("/api/ticker", {
+        method: "POST",
+        headers: { "content-type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ text: text })
+      });
+    },
+
+    // صورة الوسط (مدير فقط) — لو API عندك موجودة
+    setCenterImage: function (dataUrl) {
+      return fetchJson("/api/center-image", {
+        method: "POST",
+        headers: { "content-type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ dataUrl: dataUrl })
+      });
+    },
+    clearCenterImage: function () {
+      return fetchJson("/api/center-image/clear", { method: "POST" });
     }
   };
 
-  window.App = { API, token, setToken, setUser, getUser, setStatus };
+  function go(path) { window.location.href = path; }
+
+  window.App = {
+    API: API,
+    setStatus: setStatus,
+    setToken: setToken,
+    token: token,
+    setUser: setUser,
+    getUser: getUser,
+    go: go,
+    fmtHHMM: fmtHHMM
+  };
 })();

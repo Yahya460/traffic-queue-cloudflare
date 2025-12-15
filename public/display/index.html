@@ -1,95 +1,179 @@
-<img id="displayImg" style="max-width:100%; max-height:260px; border:1px solid rgba(0,0,0,.15); border-radius:14px; display:none;"><!doctype html>
-<html lang="en">
+<!doctype html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Display</title>
+  <title>شاشة العرض</title>
   <style>
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#0b1220;color:#fff}
-    .wrap{padding:18px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .box{border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:16px;background:rgba(255,255,255,.06)}
-    .big{font-size:84px;font-weight:900;letter-spacing:2px;line-height:1}
-    .sub{opacity:.85;margin-top:8px}
-    .ticker{position:fixed;left:0;right:0;bottom:0;padding:14px 18px;background:rgba(255,255,255,.08);border-top:1px solid rgba(255,255,255,.16);font-size:22px}
-    img{max-width:100%;border-radius:18px;border:1px solid rgba(255,255,255,.16)}
+    :root{--line:#e5e7eb;--muted:#64748b}
+    body{margin:0;font-family:system-ui;background:#ffffff;color:#0b1220}
+    .wrap{max-width:1400px;margin:0 auto;padding:16px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);object-fit:contain;padding:6px}
+    .pill{font-size:12px;color:#334155;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px}
+    .card{border:1px solid var(--line);border-radius:16px;background:#f8fafc;padding:14px}
+    .big{font-size:92px;font-weight:1000;line-height:1}
+    @media(max-width:700px){.big{font-size:64px}}
+    .cols{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px;margin-top:12px}
+    @media(max-width:1100px){.cols{grid-template-columns:1fr}}
+    .title{font-weight:1000;margin-bottom:10px}
+    .list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .box{border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}
+    .box small{display:block;margin-top:6px;color:var(--muted);font-size:12px;font-weight:800}
+    .midTop{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:13px}
+    .centerImage{margin-top:10px;border:1px dashed #cbd5e1;background:#fff;border-radius:16px;padding:10px;min-height:120px;display:flex;align-items:center;justify-content:center}
+    .centerImage img{max-width:100%;max-height:260px;border-radius:12px}
+    .footer{margin-top:14px;text-align:center;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>Display</div>
-      <div style="opacity:.8" id="clock">--:--</div>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <img class="logo" src="/logo.png" alt="logo">
+      <div>
+        <div style="font-weight:1000">شاشة عرض الدور الآلي لمعلمين السياقة – معهد السلامة المرورية صحار</div>
+        <div class="muted">تحديث تلقائي مباشر</div>
+      </div>
+    </div>
+    <span class="pill" id="st">غير متصل</span>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="midTop">
+      <div class="muted">الرقم الحالي:</div>
+      <div class="big" id="cur">—</div>
+      <span class="pill" id="g">—</span>
+      <span class="pill">آخر تحديث: <span id="up">-</span></span>
     </div>
 
-    <div class="box" style="margin-top:14px">
-      <div class="big" id="num">-</div>
-      <div class="sub" id="meta">Waiting...</div>
+    <div class="centerImage" id="imgBox">
+      <div class="muted">لا توجد صورة في الوسط</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="title">تم النداء (رجال)</div>
+      <div class="list" id="men"></div>
     </div>
 
-    <div class="box" style="margin-top:14px">
-      <div style="opacity:.8;margin-bottom:10px">Center image</div>
-      <img id="img" alt="" style="display:none"/>
-      <div id="imgEmpty" style="opacity:.6">No image</div>
+    <div class="card">
+      <div class="title">جميع النداءات (آخر 15)</div>
+      <div class="list" id="all"></div>
     </div>
- <script src="/app.js?v=disp"></script>
+
+    <div class="card">
+      <div class="title">تم النداء (نساء)</div>
+      <div class="list" id="women"></div>
+    </div>
+  </div>
+
+  <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+</div>
+
+<audio id="sndMen" src="/assets/men.mp3" preload="auto"></audio>
+<audio id="sndWomen" src="/assets/women.mp3" preload="auto"></audio>
+
+<script src="/app.js?v=stable1"></script>
 <script>
-  const displayImg = document.getElementById("displayImg");
+  var st = document.getElementById("st");
+  var cur = document.getElementById("cur");
+  var g = document.getElementById("g");
+  var up = document.getElementById("up");
+  var men = document.getElementById("men");
+  var women = document.getElementById("women");
+  var all = document.getElementById("all");
+  var imgBox = document.getElementById("imgBox");
 
-  async function refresh(){
-    const s = await App.API.state();
-    if(!s || !s.ok) return;
+  var sndMen = document.getElementById("sndMen");
+  var sndWomen = document.getElementById("sndWomen");
 
-    if(s.displayImage){
-      displayImg.src = s.displayImage;
-      displayImg.style.display = "block";
-    }else{
-      displayImg.src = "";
-      displayImg.style.display = "none";
+  function playGenderSound(gender){
+    try{
+      var a = (gender === "female") ? sndWomen : sndMen;
+      a.currentTime = 0;
+      var p = a.play();
+      if (p && p.catch) p.catch(function(){});
+    }catch(e){}
+  }
+
+  function box(item){
+    var d = document.createElement("div");
+    d.className = "box";
+    d.textContent = item.number || "—";
+    var sm = document.createElement("small");
+    sm.textContent = item.at ? ("الوقت " + App.fmtHHMM(item.at)) : "";
+    d.appendChild(sm);
+    return d;
+  }
+
+  function fill(el, arr){
+    el.innerHTML = "";
+    (arr || []).slice(0,15).forEach(function(it){ el.appendChild(box(it)); });
+    if (!arr || !arr.length){
+      var m = document.createElement("div");
+      m.className = "muted";
+      m.textContent = "لا يوجد";
+      el.appendChild(m);
     }
   }
 
-  refresh();
-  setInterval(refresh, 1000); // ✅ هذا اللي يخلي الصفحات تتجاوب
-</script> </div>
+  var lastKey = "";
 
-  <div class="ticker" id="ticker"></div>
+  function tick(){
+    App.API.state().then(function(r){
+      if(!r || !r.ok){ App.setStatus(st, "غير متصل", "err"); return; }
+      App.setStatus(st, "متصل ✅", "ok");
 
-  <script src="/app.js"></script>
-  <script>
-    const numEl = App.$("#num");
-    const metaEl = App.$("#meta");
-    const tickerEl = App.$("#ticker");
-    const clockEl = App.$("#clock");
-    const imgEl = App.$("#img");
-    const imgEmpty = App.$("#imgEmpty");
+      // نتعامل مع أكثر من شكل للـ state
+      var current = r.current || r.now || r.active || null;
+      var history = r.history || r.calls || r.all || [];
+      var menArr = r.men || r.male || r.maleCalls || [];
+      var womenArr = r.women || r.female || r.femaleCalls || [];
 
-    function tickClock(){
-      const d = new Date();
-      clockEl.textContent = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-    }
-    setInterval(tickClock, 1000); tickClock();
-
-    async function refresh(){
-      const s = await App.API.state();
-      if(s.ok){
-        numEl.textContent = (s.current?.number ?? "-");
-        metaEl.textContent = "Gender: " + (s.current?.gender ?? "-") + " • By: " + (s.current?.by ?? "-");
+      // إذا السيرفر ما يعطي قوائم منفصلة، نفصلها من history
+      if ((!menArr || !menArr.length) && history && history.length){
+        menArr = history.filter(function(x){ return x.gender === "male"; });
       }
-      const t = await App.API.getTicker();
-      if(t.ok) tickerEl.textContent = t.text || "";
-      const im = await App.API.getCenterImage();
-      if(im.ok && im.dataUrl){
-        imgEl.src = im.dataUrl;
-        imgEl.style.display = "block";
-        imgEmpty.style.display = "none";
-      }else{
-        imgEl.style.display = "none";
-        imgEmpty.style.display = "block";
+      if ((!womenArr || !womenArr.length) && history && history.length){
+        womenArr = history.filter(function(x){ return x.gender === "female"; });
       }
-    }
-    refresh();
-    setInterval(refresh, 1500);
-  </script>
+
+      if (current && current.number){
+        cur.textContent = current.number;
+        g.textContent = (current.gender === "female") ? "نساء" : "رجال";
+        up.textContent = current.at ? App.fmtHHMM(current.at) : "-";
+
+        var k = String(current.number) + "|" + String(current.gender) + "|" + String(current.at || "");
+        if (k !== lastKey){
+          lastKey = k;
+          playGenderSound(current.gender);
+        }
+      }
+
+      // آخر 15 (مع الوقت)
+      fill(all, history.slice(0,15));
+      fill(men, menArr.slice(0,15));
+      fill(women, womenArr.slice(0,15));
+
+      // صورة الوسط (لو موجودة في state)
+      var dataUrl = r.centerImage || (r.image && r.image.dataUrl) || "";
+      if (dataUrl){
+        imgBox.innerHTML = '<img src="'+dataUrl+'" alt="center">';
+      } else {
+        imgBox.innerHTML = '<div class="muted">لا توجد صورة في الوسط</div>';
+      }
+    }).catch(function(){
+      App.setStatus(st, "غير متصل", "err");
+    });
+  }
+
+  // تحديث كل 1 ثانية
+  tick();
+  setInterval(tick, 1000);
+</script>
 </body>
 </html>

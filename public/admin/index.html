@@ -1,263 +1,139 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Admin</title>
-  <link rel="stylesheet" href="/styles.css"/>
+  <title>لوحة المدير</title>
+  <style>
+    body{margin:0;font-family:system-ui;background:#fff;color:#111}
+    .wrap{max-width:1000px;margin:0 auto;padding:18px}
+    .card{border:1px solid #e5e7eb;border-radius:16px;background:#f8fafc;padding:16px;margin-top:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    button{padding:12px 14px;border-radius:14px;border:1px solid #cbd5e1;background:#eef2ff;font-weight:900;cursor:pointer}
+    .muted{color:#64748b;font-size:13px}
+    input[type=file]{padding:10px;border:1px solid #cbd5e1;border-radius:14px;background:#fff}
+    img{max-width:100%;border-radius:14px;border:1px solid #e5e7eb}
+    .pill{font-size:12px;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:6px 10px}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="row" style="justify-content:space-between">
-      <h2 style="margin:0">Admin</h2>
-      <span class="pill" id="status">...</span>
-    </div>
-
-    <div class="card">
-      <div class="grid">
-        <div class="row">
-          <a href="/display/">Open Display</a>
-          <a href="/staff/">Staff</a>
-          <button class="red" id="logoutBtn">Logout</button>
-        </div>
-
-        <hr/>
-
-        <h3 style="margin:0">Add user</h3>
-        <div class="grid grid2">
-          <div>
-            <small>Username</small>
-            <input id="newUser" placeholder="khalid"/>
-          </div>
-          <div>
-            <small>Password</small>
-            <input id="newPass" placeholder="1234"/>
-          </div>
-        </div>
-        <div class="row">
-          <select id="newRole">
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button id="addBtn">Add</button>
-          <button id="reloadBtn">Reload list</button>
-        </div>
-
-        <hr/>
-
-        <h3 style="margin:0">Users</h3>
-        <div style="overflow:auto">
-          <table>
-            <thead>
-              <tr><th>Username</th><th>Role</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-
-        <hr/>
-
-        <h3 style="margin:0">Ticker (bottom line)</h3>
-        <div class="row">
-          <input id="ticker" placeholder="Write message for display"/>
-          <button id="tickerBtn">Send</button>
-        </div>
-
-        <h3 style="margin:0">Center image (upload/camera)</h3>
-        <div class="row">
-          <input id="imgFile" type="file" accept="image/*" capture="environment"/>
-          <button id="sendImgBtn">Show on display</button>
-          <button class="red" id="clearImgBtn">Clear</button>
-        </div>
-        <small>On phone: tap file → choose Camera to take a photo.</small>
-      </div>
-    </div>
+<div class="wrap">
+  <div class="row" style="justify-content:space-between">
+    <div style="font-weight:1000">لوحة المدير</div>
+    <span class="pill" id="st">جاهز</span>
   </div>
 
-  <script src="/app.js"></script>
-  <script>
-    const statusEl = App.$("#status");
-    const tbody = App.$("#tbody");
+  <div class="card">
+    <div class="muted">رفع صورة أو تصوير بالكاميرا (تظهر في شاشة العرض بالعمود الأوسط)</div>
+    <div class="row" style="margin-top:10px">
+      <input id="file" type="file" accept="image/*">
+      <button id="btnCam">تصوير بالكاميرا</button>
+      <button id="btnSend">إرسال للصالة</button>
+      <button id="btnClear">حذف الصورة</button>
+    </div>
 
-    function requireAdmin(){
-      const u = App.getUser();
-      if(!u) return location.href="/login/";
-      if(u.role !== "admin") return location.href="/staff/";
-      App.setStatus(statusEl, u.username + " (admin)", "ok");
-    }
-    requireAdmin();
+    <div style="margin-top:12px" id="preview" class="muted">لا توجد صورة بعد</div>
+    <video id="vid" class="card" style="display:none;background:#000" autoplay playsinline></video>
+    <canvas id="cv" style="display:none"></canvas>
+  </div>
 
-    function rowHtml(u){
-      const promoteLabel = (u.role === "admin") ? "Make Staff" : "Promote to Admin";
-      const promoteRole  = (u.role === "admin") ? "staff" : "admin";
-      return `
-        <tr>
-          <td>${u.username}</td>
-          <td>${u.role}</td>
-          <td class="actions">
-            <button data-act="promote" data-user="${u.username}" data-role="${promoteRole}">${promoteLabel}</button>
-            <button data-act="reset" data-user="${u.username}">Reset Pass</button>
-            <button class="red" data-act="del" data-user="${u.username}">Delete</button>
-          </td>
-        </tr>`;
-    }
+  <div class="card">
+    <div class="muted">روابط:</div>
+    <div class="row" style="margin-top:8px">
+      <a href="/display/">شاشة العرض</a>
+      <a href="/staff/">شاشة الفاحص</a>
+      <a href="/login/">تسجيل الدخول</a>
+    </div>
+  </div>
+</div>
 
-    async function loadUsers(){
-      const r = await App.API.usersList();
-      if(!r.ok) return alert(r.error || "Cannot load users");
-      tbody.innerHTML = (r.users || []).map(rowHtml).join("");
-    }
-
-    tbody.addEventListener("click", async (ev)=>{
-      const btn = ev.target.closest("button");
-      if(!btn) return;
-      const act = btn.dataset.act;
-      const user = btn.dataset.user;
-
-      if(act === "del"){
-        if(!confirm("Delete " + user + "?")) return;
-        const r = await App.API.usersDelete(user);
-        if(!r.ok) return alert(r.error || "Failed");
-        return loadUsers();
-      }
-
-      if(act === "reset"){
-        const pw = prompt("New password for " + user + ":");
-        if(!pw) return;
-        const r = await App.API.usersResetPassword(user, pw);
-        if(!r.ok) return alert(r.error || "Failed");
-        return alert("Password updated");
-      }
-
-      if(act === "promote"){
-        const role = btn.dataset.role;
-        const r = await App.API.usersSetRole(user, role);
-        if(!r.ok) return alert(r.error || "Failed");
-        return loadUsers();
-      }
-    });
-
-    App.$("#addBtn").addEventListener("click", async ()=>{
-      const u = App.$("#newUser").value.trim();
-      const p = App.$("#newPass").value;
-      const role = App.$("#newRole").value;
-      const r = await App.API.usersAdd(u, p, role);
-      if(!r.ok) return alert(r.error || "Failed");
-      App.$("#newUser").value = "";
-      App.$("#newPass").value = "";
-      await loadUsers();
-    });
-
-    App.$("#reloadBtn").addEventListener("click", loadUsers);
-
-    App.$("#logoutBtn").addEventListener("click", async ()=>{
-      await App.API.logout();
-      location.href="/login/";
-    });
-
-    App.$("#tickerBtn").addEventListener("click", async ()=>{
-      const text = App.$("#ticker").value;
-      const r = await App.API.setTicker(text);
-      if(!r.ok) return alert(r.error || "Failed");
-      alert("Sent");
-    });
-
-    let lastDataUrl = "";
-    App.$("#sendImgBtn").addEventListener("click", async ()=>{
-      const f = App.$("#imgFile").files?.[0];
-      if(!f) return alert("Choose image/camera first");
-      const dataUrl = await new Promise((res)=>{
-        const rd = new FileReader();
-        rd.onload = ()=>res(rd.result);
-        rd.readAsDataURL(f);
-      });
-      lastDataUrl = dataUrl;
-      const r = await App.API.setCenterImage(dataUrl);
-      if(!r.ok) return alert(r.error || "Failed");
-      alert("Shown on display");
-    });
-
-    App.$("#clearImgBtn").addEventListener("click", async ()=>{
-      const r = await App.API.setCenterImage("");
-      if(!r.ok) return alert(r.error || "Failed");
-      alert("Cleared");
-    });
-
-    loadUsers();
-  </script>
-</body>
-</html><hr>
-<h3>📷 صورة تُعرض في شاشة العرض (صلاحية المدير فقط)</h3>
-
-<input id="imgFile" type="file" accept="image/*">
-<button id="btnSendImg">📤 إرسال الصورة</button>
-<button id="btnClearImg">🧹 مسح الصورة</button>
-
-<br><br>
-
-<button id="btnCam">فتح الكاميرا</button>
-<button id="btnSnap" disabled>التقاط وإرسال</button>
-
-<br><br>
-<video id="cam" autoplay playsinline style="width:260px; border:1px solid #ccc; border-radius:12px; display:none;"></video>
-<canvas id="cv" style="display:none;"></canvas>
-
+<script src="/app.js?v=stable1"></script>
 <script>
-  const imgFile = document.getElementById("imgFile");
-  const btnSendImg = document.getElementById("btnSendImg");
-  const btnClearImg = document.getElementById("btnClearImg");
-  const btnCam = document.getElementById("btnCam");
-  const btnSnap = document.getElementById("btnSnap");
-  const cam = document.getElementById("cam");
-  const cv = document.getElementById("cv");
+  var st = document.getElementById("st");
+  var file = document.getElementById("file");
+  var btnCam = document.getElementById("btnCam");
+  var btnSend = document.getElementById("btnSend");
+  var btnClear = document.getElementById("btnClear");
+  var preview = document.getElementById("preview");
+  var vid = document.getElementById("vid");
+  var cv = document.getElementById("cv");
 
-  let stream = null;
+  function requireAdmin(){
+    var u = App.getUser();
+    if(!u || u.role !== "admin"){
+      App.setStatus(st, "هذه الصفحة للمدير فقط", "err");
+      location.href = "/login/";
+      return false;
+    }
+    return true;
+  }
+  requireAdmin();
 
-  function fileToDataUrl(file){
-    return new Promise((resolve, reject)=>{
-      const r = new FileReader();
-      r.onload = ()=> resolve(r.result);
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
+  var currentDataUrl = "";
+
+  function showPreview(){
+    if(!currentDataUrl){ preview.innerHTML = "لا توجد صورة بعد"; return; }
+    preview.innerHTML = '<img src="'+currentDataUrl+'" alt="preview">';
   }
 
-  btnSendImg.onclick = async () => {
-    if(!imgFile.files[0]) return alert("اختر صورة أولاً");
-    const dataUrl = await fileToDataUrl(imgFile.files[0]);
-    const r = await App.API.setDisplayImage(dataUrl);
-    if(!r.ok) return alert("فشل الإرسال: " + (r.error || r._status));
-    alert("تم إرسال الصورة لشاشة العرض ✅");
-  };
+  file.addEventListener("change", function(){
+    var f = file.files && file.files[0];
+    if(!f) return;
+    var r = new FileReader();
+    r.onload = function(){ currentDataUrl = String(r.result || ""); showPreview(); };
+    r.readAsDataURL(f);
+  });
 
-  btnClearImg.onclick = async () => {
-    const r = await App.API.clearDisplayImage();
-    if(!r.ok) return alert("فشل المسح: " + (r.error || r._status));
-    alert("تم مسح الصورة ✅");
-  };
-
-  btnCam.onclick = async () => {
+  btnCam.addEventListener("click", async function(){
+    if(!requireAdmin()) return;
     try{
-      stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
-      cam.srcObject = stream;
-      cam.style.display = "block";
-      btnSnap.disabled = false;
+      var stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      vid.style.display = "block";
+      vid.srcObject = stream;
+
+      // التقط صورة بعد 1 ثانية
+      setTimeout(function(){
+        cv.width = vid.videoWidth || 640;
+        cv.height = vid.videoHeight || 480;
+        var ctx = cv.getContext("2d");
+        ctx.drawImage(vid, 0, 0, cv.width, cv.height);
+        currentDataUrl = cv.toDataURL("image/jpeg", 0.85);
+        showPreview();
+
+        // وقف الكاميرا
+        try{
+          stream.getTracks().forEach(function(t){ t.stop(); });
+        }catch(e){}
+        vid.style.display = "none";
+      }, 1000);
     }catch(e){
-      alert("تعذر فتح الكاميرا: " + e.message);
+      App.setStatus(st, "فشل فتح الكاميرا", "err");
     }
-  };
+  });
 
-  btnSnap.onclick = async () => {
-    if(!stream) return;
-    const w = cam.videoWidth || 640;
-    const h = cam.videoHeight || 480;
-    cv.width = w; cv.height = h;
-    const ctx = cv.getContext("2d");
-    ctx.drawImage(cam, 0, 0, w, h);
-    const dataUrl = cv.toDataURL("image/jpeg", 0.85);
+  btnSend.addEventListener("click", function(){
+    if(!requireAdmin()) return;
+    if(!currentDataUrl){ App.setStatus(st, "اختر/صور صورة أولاً", "warn"); return; }
 
-    const r = await App.API.setDisplayImage(dataUrl);
-    if(!r.ok) return alert("فشل الإرسال: " + (r.error || r._status));
-    alert("تم إرسال الصورة ✅");
-  };
+    App.setStatus(st, "جاري الإرسال...", "warn");
+    App.API.setCenterImage(currentDataUrl).then(function(r){
+      if(r && r.ok) App.setStatus(st, "تم ✅", "ok");
+      else App.setStatus(st, "فشل (تأكد من API)", "err");
+    }).catch(function(){
+      App.setStatus(st, "فشل (تأكد من API)", "err");
+    });
+  });
+
+  btnClear.addEventListener("click", function(){
+    if(!requireAdmin()) return;
+    App.setStatus(st, "جاري الحذف...", "warn");
+    App.API.clearCenterImage().then(function(r){
+      if(r && r.ok){ currentDataUrl=""; showPreview(); App.setStatus(st, "تم الحذف ✅", "ok"); }
+      else App.setStatus(st, "فشل (تأكد من API)", "err");
+    }).catch(function(){
+      App.setStatus(st, "فشل (تأكد من API)", "err");
+    });
+  });
 </script>
+</body>
+</html>

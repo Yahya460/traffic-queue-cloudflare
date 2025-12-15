@@ -1,90 +1,76 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Staff</title>
-  <link rel="stylesheet" href="/styles.css"/>
+  <title>شاشة الفاحص</title>
+  <style>
+    body{margin:0;font-family:system-ui;background:#fff;color:#111}
+    .wrap{max-width:900px;margin:0 auto;padding:18px}
+    .card{border:1px solid #e5e7eb;border-radius:16px;background:#f8fafc;padding:16px;margin-top:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,select{padding:12px;border-radius:14px;border:1px solid #d1d5db;font-size:16px}
+    button{padding:12px 14px;border-radius:14px;border:1px solid #cbd5e1;background:#eef2ff;font-weight:900;cursor:pointer}
+    .pill{font-size:12px;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:6px 10px}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="row" style="justify-content:space-between">
-      <h2 style="margin:0">Staff</h2>
-      <span class="pill" id="status">...</span>
-    </div>
-
-    <div class="card">
-      <div class="grid">
-        <div class="grid grid2">
-          <div>
-            <small>Number</small>
-            <input id="num" placeholder="12"/>
-          </div>
-          <div>
-            <small>Gender</small>
-            <select id="gender">
-              <option value="M">Men</option>
-              <option value="F">Women</option>
-            </select>
-          </div>
-        </div>
-        <div class="row">
-          <button id="nextBtn">Next</button>
-          <button id="prevBtn">Prev</button>
-          <button class="red" id="logoutBtn">Logout</button>
-          <a href="/display/">Open Display</a>
-        </div>
-        <small id="now"></small>
-      </div>
-    </div>
+<div class="wrap">
+  <div class="row" style="justify-content:space-between">
+    <div style="font-weight:1000">شاشة الفاحص</div>
+    <span class="pill" id="st">جاهز</span>
   </div>
 
-  <script src="/app.js"></script>
-  <script>
-    const statusEl = App.$("#status");
-    const nowEl = App.$("#now");
-    const numEl = App.$("#num");
-    const genderEl = App.$("#gender");
+  <div class="card">
+    <div class="row">
+      <input id="num" placeholder="رقم التلميذ" style="width:200px">
+      <select id="gender">
+        <option value="male">رجال</option>
+        <option value="female">نساء</option>
+      </select>
+      <button id="btn">نداء</button>
+      <button id="prev">العميل السابق</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <a href="/display/">شاشة العرض</a>
+      <a href="/admin/">لوحة المدير</a>
+      <a href="/login/">تسجيل الدخول</a>
+    </div>
+  </div>
+</div>
 
-    function requireLogin(){
-      const u = App.getUser();
-      if(!u) location.href = "/login/";
-    }
-    requireLogin();
+<script src="/app.js?v=stable1"></script>
+<script>
+  var st = document.getElementById("st");
+  var num = document.getElementById("num");
+  var gender = document.getElementById("gender");
+  var btn = document.getElementById("btn");
+  var prev = document.getElementById("prev");
 
-    async function refresh(){
-      const s = await App.API.state();
-      if(s.ok){
-        nowEl.textContent = "Current: " + (s.current?.number ?? "-") + " (" + (s.current?.gender ?? "-") + ")";
-        App.setStatus(statusEl, App.getUser().username + " (" + App.getUser().role + ")", "info");
-      }else{
-        App.setStatus(statusEl, "State error", "warn");
-      }
-    }
+  function requireStaff(){
+    var u = App.getUser();
+    if(!u){ location.href="/login/"; return false; }
+    return true;
+  }
+  requireStaff();
 
-    App.$("#nextBtn").addEventListener("click", async ()=>{
-      const n = parseInt(numEl.value, 10);
-      if(!Number.isFinite(n)) return alert("Enter a number");
-      const r = await App.API.next(n, genderEl.value);
-      if(!r.ok) return alert(r.error || "Failed");
-      await refresh();
-      numEl.value = "";
-      numEl.focus();
-    });
+  btn.addEventListener("click", function(){
+    var n = (num.value || "").trim();
+    if(!n){ App.setStatus(st, "اكتب رقم", "warn"); return; }
+    App.setStatus(st, "جاري النداء...", "warn");
+    App.API.next(n, gender.value).then(function(r){
+      if(r && r.ok) App.setStatus(st, "تم ✅", "ok");
+      else App.setStatus(st, "فشل", "err");
+    }).catch(function(){ App.setStatus(st, "فشل", "err"); });
+  });
 
-    App.$("#prevBtn").addEventListener("click", async ()=>{
-      const r = await App.API.prev();
-      if(!r.ok) return alert(r.error || "Failed");
-      await refresh();
-    });
-
-    App.$("#logoutBtn").addEventListener("click", async ()=>{
-      await App.API.logout();
-      location.href = "/login/";
-    });
-
-    refresh();
-    setInterval(refresh, 1500);
-  </script>
+  prev.addEventListener("click", function(){
+    App.setStatus(st, "رجوع...", "warn");
+    App.API.prev().then(function(r){
+      if(r && r.ok) App.setStatus(st, "تم ✅", "ok");
+      else App.setStatus(st, "فشل", "err");
+    }).catch(function(){ App.setStatus(st, "فشل", "err"); });
+  });
+</script>
 </body>
 </html>

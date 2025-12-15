@@ -1,61 +1,92 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Login</title>
-  <link rel="stylesheet" href="/styles.css"/>
+  <style>
+    body{margin:0;font-family:system-ui;background:#fff;color:#111}
+    .wrap{max-width:900px;margin:0 auto;padding:18px}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:14px;border:1px solid #ddd;object-fit:contain;padding:6px}
+    .card{margin-top:14px;border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#f8fafc}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+    input{width:100%;padding:12px;border-radius:14px;border:1px solid #d1d5db;font-size:16px}
+    button{width:100%;padding:12px;border-radius:14px;border:1px solid #c7d2fe;background:#eef2ff;font-weight:900;cursor:pointer}
+    .status{font-size:12px;color:#334155;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:6px 10px}
+    ul{margin:10px 0 0}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="row" style="justify-content:space-between">
-      <h2 style="margin:0">Login</h2>
-      <span class="pill" id="status">Ready</span>
+<div class="wrap">
+  <div class="head">
+    <div class="brand">
+      <img class="logo" src="/logo.png" alt="logo">
+      <div>
+        <div style="font-weight:900">تسجيل الدخول (المدير / الفاحص)</div>
+        <div style="color:#64748b;font-size:13px">نظام الدور الآلي – معهد السلامة المرورية صحار</div>
+      </div>
+    </div>
+    <span class="status" id="st">جاهز</span>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <div style="font-size:13px;color:#64748b;margin:0 0 6px">اسم المستخدم</div>
+        <input id="u" placeholder="مثال: يوسف أو خالد">
+      </div>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin:0 0 6px">كلمة المرور</div>
+        <input id="p" type="password" placeholder="••••••••">
+      </div>
     </div>
 
-    <div class="card">
-      <div class="grid">
-        <div class="grid grid2">
-          <div>
-            <small>Username</small>
-            <input id="u" autocomplete="username" placeholder="yusuf / khalid ..."/>
-          </div>
-          <div>
-            <small>Password</small>
-            <input id="p" type="password" autocomplete="current-password" placeholder="••••••••"/>
-          </div>
-        </div>
+    <div style="margin-top:12px">
+      <button id="btn">دخول</button>
+    </div>
 
-        <button id="btn">Login</button>
-
-        <small>
-          Default admin: <b>yusuf / 2626</b><br/>
-          Links: <a href="/staff/">Staff</a> • <a href="/admin/">Admin</a> • <a href="/display/">Display</a>
-        </small>
-      </div>
+    <div style="margin-top:12px;color:#64748b;font-size:13px">
+      روابط الشاشات:
+      <ul>
+        <li><a href="/display/">شاشة العرض</a></li>
+        <li><a href="/staff/">شاشة الفاحص</a></li>
+        <li><a href="/admin/">لوحة المدير</a></li>
+      </ul>
     </div>
   </div>
 
-  <script src="/app.js"></script>
-  <script>
-    const statusEl = App.$("#status");
-    const u = App.$("#u");
-    const p = App.$("#p");
-    const btn = App.$("#btn");
+  <div style="margin-top:16px;text-align:center;color:#64748b;font-size:13px">
+    جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
+  </div>
+</div>
 
-    async function go(){
-      try{
-        App.setStatus(statusEl, "Signing in...", "info");
-        const r = await App.API.login(u.value.trim(), p.value);
-        App.setStatus(statusEl, "OK ✅", "ok");
-        if(r.role === "admin") location.href = "/admin/";
-        else location.href = "/staff/";
-      }catch(e){
-        App.setStatus(statusEl, "Failed: " + e.message, "err");
-      }
-    }
-    btn.addEventListener("click", go);
-    p.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") go(); });
-  </script>
+<script src="/app.js?v=stable1"></script>
+<script>
+  var st = document.getElementById("st");
+  var u = document.getElementById("u");
+  var p = document.getElementById("p");
+  var btn = document.getElementById("btn");
+
+  function goLogin(){
+    App.setStatus(st, "جاري الدخول...", "warn");
+    App.API.login(u.value.trim(), p.value).then(function(r){
+      // السيرفر عندك يرجع token/username/role مثل الصورة
+      App.setToken(r.token || "");
+      App.setUser({ username: r.username, role: r.role });
+
+      App.setStatus(st, "تم الدخول ✅", "ok");
+      if (r.role === "admin") location.href = "/admin/";
+      else location.href = "/staff/";
+    }).catch(function(e){
+      App.setStatus(st, "فشل تسجيل الدخول", "err");
+    });
+  }
+
+  btn.addEventListener("click", goLogin);
+  p.addEventListener("keydown", function(ev){ if(ev.key==="Enter") goLogin(); });
+</script>
 </body>
 </html>
