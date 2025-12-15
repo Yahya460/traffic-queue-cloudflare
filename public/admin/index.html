@@ -1,139 +1,21 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>لوحة المدير</title>
-  <style>
-    body{margin:0;font-family:system-ui;background:#fff;color:#111}
-    .wrap{max-width:1000px;margin:0 auto;padding:18px}
-    .card{border:1px solid #e5e7eb;border-radius:16px;background:#f8fafc;padding:16px;margin-top:12px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    button{padding:12px 14px;border-radius:14px;border:1px solid #cbd5e1;background:#eef2ff;font-weight:900;cursor:pointer}
-    .muted{color:#64748b;font-size:13px}
-    input[type=file]{padding:10px;border:1px solid #cbd5e1;border-radius:14px;background:#fff}
-    img{max-width:100%;border-radius:14px;border:1px solid #e5e7eb}
-    .pill{font-size:12px;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:6px 10px}
-  </style>
-</head>
-<body>
-<div class="wrap">
-  <div class="row" style="justify-content:space-between">
-    <div style="font-weight:1000">لوحة المدير</div>
-    <span class="pill" id="st">جاهز</span>
-  </div>
+<button onclick="sendImage()">إرسال الصورة للشاشة</button>
+<input type="file" id="img" accept="image/*">
 
-  <div class="card">
-    <div class="muted">رفع صورة أو تصوير بالكاميرا (تظهر في شاشة العرض بالعمود الأوسط)</div>
-    <div class="row" style="margin-top:10px">
-      <input id="file" type="file" accept="image/*">
-      <button id="btnCam">تصوير بالكاميرا</button>
-      <button id="btnSend">إرسال للصالة</button>
-      <button id="btnClear">حذف الصورة</button>
-    </div>
-
-    <div style="margin-top:12px" id="preview" class="muted">لا توجد صورة بعد</div>
-    <video id="vid" class="card" style="display:none;background:#000" autoplay playsinline></video>
-    <canvas id="cv" style="display:none"></canvas>
-  </div>
-
-  <div class="card">
-    <div class="muted">روابط:</div>
-    <div class="row" style="margin-top:8px">
-      <a href="/display/">شاشة العرض</a>
-      <a href="/staff/">شاشة الفاحص</a>
-      <a href="/login/">تسجيل الدخول</a>
-    </div>
-  </div>
-</div>
-
-<script src="/app.js?v=stable1"></script>
 <script>
-  var st = document.getElementById("st");
-  var file = document.getElementById("file");
-  var btnCam = document.getElementById("btnCam");
-  var btnSend = document.getElementById("btnSend");
-  var btnClear = document.getElementById("btnClear");
-  var preview = document.getElementById("preview");
-  var vid = document.getElementById("vid");
-  var cv = document.getElementById("cv");
+async function sendImage(){
+  const f = document.getElementById("img").files[0];
+  if(!f) return alert("اختر صورة");
 
-  function requireAdmin(){
-    var u = App.getUser();
-    if(!u || u.role !== "admin"){
-      App.setStatus(st, "هذه الصفحة للمدير فقط", "err");
-      location.href = "/login/";
-      return false;
-    }
-    return true;
-  }
-  requireAdmin();
-
-  var currentDataUrl = "";
-
-  function showPreview(){
-    if(!currentDataUrl){ preview.innerHTML = "لا توجد صورة بعد"; return; }
-    preview.innerHTML = '<img src="'+currentDataUrl+'" alt="preview">';
-  }
-
-  file.addEventListener("change", function(){
-    var f = file.files && file.files[0];
-    if(!f) return;
-    var r = new FileReader();
-    r.onload = function(){ currentDataUrl = String(r.result || ""); showPreview(); };
-    r.readAsDataURL(f);
-  });
-
-  btnCam.addEventListener("click", async function(){
-    if(!requireAdmin()) return;
-    try{
-      var stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
-      vid.style.display = "block";
-      vid.srcObject = stream;
-
-      // التقط صورة بعد 1 ثانية
-      setTimeout(function(){
-        cv.width = vid.videoWidth || 640;
-        cv.height = vid.videoHeight || 480;
-        var ctx = cv.getContext("2d");
-        ctx.drawImage(vid, 0, 0, cv.width, cv.height);
-        currentDataUrl = cv.toDataURL("image/jpeg", 0.85);
-        showPreview();
-
-        // وقف الكاميرا
-        try{
-          stream.getTracks().forEach(function(t){ t.stop(); });
-        }catch(e){}
-        vid.style.display = "none";
-      }, 1000);
-    }catch(e){
-      App.setStatus(st, "فشل فتح الكاميرا", "err");
-    }
-  });
-
-  btnSend.addEventListener("click", function(){
-    if(!requireAdmin()) return;
-    if(!currentDataUrl){ App.setStatus(st, "اختر/صور صورة أولاً", "warn"); return; }
-
-    App.setStatus(st, "جاري الإرسال...", "warn");
-    App.API.setCenterImage(currentDataUrl).then(function(r){
-      if(r && r.ok) App.setStatus(st, "تم ✅", "ok");
-      else App.setStatus(st, "فشل (تأكد من API)", "err");
-    }).catch(function(){
-      App.setStatus(st, "فشل (تأكد من API)", "err");
+  const r = new FileReader();
+  r.onload = async () => {
+    const res = await fetch("/api/center-image",{
+      method:"POST",
+      headers:{ "content-type":"application/json" },
+      body: JSON.stringify({ image:r.result })
     });
-  });
-
-  btnClear.addEventListener("click", function(){
-    if(!requireAdmin()) return;
-    App.setStatus(st, "جاري الحذف...", "warn");
-    App.API.clearCenterImage().then(function(r){
-      if(r && r.ok){ currentDataUrl=""; showPreview(); App.setStatus(st, "تم الحذف ✅", "ok"); }
-      else App.setStatus(st, "فشل (تأكد من API)", "err");
-    }).catch(function(){
-      App.setStatus(st, "فشل (تأكد من API)", "err");
-    });
-  });
+    const j = await res.json();
+    alert(j.ok ? "تم الإرسال" : "فشل");
+  };
+  r.readAsDataURL(f);
+}
 </script>
-</body>
-</html>
