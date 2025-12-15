@@ -23,12 +23,13 @@
   }
 
   function token() {
-    return localStorage.getItem(LS_TOKEN) || "";
-  }
+      return localStorage.getItem(LS_TOKEN) || localStorage.getItem("token") || "";
+    }
 
   function setToken(t) {
     if (t) localStorage.setItem(LS_TOKEN, t);
     else localStorage.removeItem(LS_TOKEN);
+      localStorage.removeItem("token");
   }
 
   function getUser() {
@@ -38,6 +39,7 @@
   function setUser(u) {
     if (u) localStorage.setItem(LS_USER, JSON.stringify(u));
     else localStorage.removeItem(LS_USER);
+      localStorage.removeItem("user");
   }
 
   // دالة الحالة (Status) المطلوبة داخل الصفحات
@@ -206,4 +208,5 @@
   window.App = { API, token, setToken, getUser, setUser, setStatus, go, fmtTime, fmtHHMM };
   window.setStatus = setStatus; // توافق مع أي كود قديم
 })();
-window.App = App;
+// alias للنسخ القديمة
+var App = window.App;
