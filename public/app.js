@@ -206,3 +206,4 @@
   window.App = { API, token, setToken, getUser, setUser, setStatus, go, fmtTime, fmtHHMM };
   window.setStatus = setStatus; // توافق مع أي كود قديم
 })();
+window.App = App;
