@@ -6,88 +6,75 @@ export class QueueDO {
 
   async fetch(request) {
     const url = new URL(request.url);
+    const path = url.pathname;
 
-    // ===============================
-    // HEALTH
-    // ===============================
-    if (url.pathname === "/health") {
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { "Content-Type": "application/json" }
-      });
+    // health check
+    if (path === "/api/health") {
+      return json({ ok: true, status: "alive" });
     }
 
-    // ===============================
-    // LOGIN
-    // ===============================
-    if (url.pathname === "/login" && request.method === "POST") {
+    // login
+    if (path === "/api/login" && request.method === "POST") {
       const body = await request.json();
 
-      if (body.username === "يوسف" && body.password === "2626") {
-        return new Response(JSON.stringify({
+      if (
+        body.username === "يوسف" &&
+        body.password === "2626"
+      ) {
+        return json({
           ok: true,
           role: "admin",
           name: "يوسف"
-        }), {
-          headers: { "Content-Type": "application/json" }
         });
       }
 
-      return new Response(JSON.stringify({
-        ok: false,
-        error: "INVALID_LOGIN"
-      }), { status: 401 });
+      return json({ ok: false, error: "INVALID_LOGIN" }, 401);
     }
 
-    // ===============================
-    // UPLOAD IMAGE
-    // ===============================
-    if (url.pathname === "/upload" && request.method === "POST") {
+    // upload image
+    if (path === "/api/upload" && request.method === "POST") {
       const formData = await request.formData();
       const file = formData.get("file");
 
       if (!file) {
-        return new Response(JSON.stringify({
-          ok: false,
-          error: "NO_FILE"
-        }), { status: 400 });
+        return json({ ok: false, error: "NO_FILE" }, 400);
       }
 
-      const buffer = await file.arrayBuffer();
+      const arrayBuffer = await file.arrayBuffer();
       const base64 = btoa(
-        String.fromCharCode(...new Uint8Array(buffer))
+        String.fromCharCode(...new Uint8Array(arrayBuffer))
       );
 
-      const image = data:${file.type};base64,${base64};
-
-      await this.state.storage.put("lastImage", image);
-
-      return new Response(JSON.stringify({
-        ok: true
-      }), {
-        headers: { "Content-Type": "application/json" }
+      await this.state.storage.put("lastImage", {
+        type: file.type,
+        data: base64,
+        time: Date.now()
       });
+
+      return json({ ok: true });
     }
 
-    // ===============================
-    // ✅ LAST IMAGE (هذا كان ناقص)
-    // ===============================
-    if (url.pathname === "/last-image") {
-      const image = await this.state.storage.get("lastImage");
+    // get last image
+    if (path === "/api/last-image") {
+      const img = await this.state.storage.get("lastImage");
 
-      return new Response(JSON.stringify({
-        ok: true,
-        image: image || null
-      }), {
-        headers: { "Content-Type": "application/json" }
-      });
+      if (!img) {
+        return json({ ok: true, image: null });
+      }
+
+      return json({ ok: true, image: img });
     }
 
-    // ===============================
-    // NOT FOUND
-    // ===============================
-    return new Response(JSON.stringify({
-      ok: false,
-      error: "NOT_FOUND"
-    }), { status: 404 });
-  }
+    // fallback
+    return json({ ok: false, error: "NOT_FOUND" }, 404);
+  }
+}
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    }
+  });
 }
