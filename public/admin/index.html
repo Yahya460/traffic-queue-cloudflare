@@ -1,61 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="UTF-8">
   <title>لوحة المدير</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/styles.css">
 </head>
+
 <body>
-<div class="container">
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <div>
-        <div class="h1">لوحة المدير</div>
-        <div class="small" id="me"></div>
-      </div>
-      <div class="row">
-        <a class="pill" href="/display/" target="_blank">فتح شاشة العرض</a>
-        <a class="pill" href="/staff/" target="_blank">فتح شاشة الفاحص</a>
-        <a class="pill" href="/login/">تسجيل دخول</a>
-      </div>
+  <div class="container">
+    <h1>لوحة المدير</h1>
+    <p>المستخدم: يوسف – الصلاحية: admin</p>
+
+    <div style="margin:20px 0;">
+      <button onclick="location.href='/login/'">تسجيل دخول</button>
+      <button onclick="location.href='/display/'">فتح شاشة العرض</button>
+      <button onclick="location.href='/staff/'">فتح شاشة الفاحص</button>
     </div>
 
     <hr>
 
-    <div class="box small">
-      ✅ ملاحظة مهمة: “رفع/تصوير صورة للشاشة” لن يعمل الآن لأن الـ API عندك يرجع <b>NOT_FOUND</b> للمسار الخاص بالصورة.
-      <br>بعد ما نثبت النظام بالكامل، أضيف لك API للصورة وتشتغل من صلاحية المدير فقط.
-    </div>
+    <h3>📷 رفع / تصوير صورة للشاشة</h3>
 
-    <div class="row" style="margin-top:12px">
-      <button id="btnCheck">تأكد من API</button>
-      <span class="pill" id="st">جاهز</span>
-    </div>
+    <input
+      type="file"
+      id="fileInput"
+      accept="image/*"
+      capture="environment"
+      style="margin-bottom:10px;"
+    >
 
-    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+    <br>
+
+    <button id="uploadBtn">رفع الصورة</button>
+
+    <p id="uploadStatus" style="margin-top:10px;"></p>
+
+    <hr>
+
+    <p style="color:#666;font-size:13px;">
+      ملاحظة: هذه الميزة مخصصة للمدير فقط، وستظهر الصورة لاحقًا في شاشة العرض.
+    </p>
+
+    <p style="margin-top:40px;font-size:12px;color:#888;">
+      جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
+    </p>
   </div>
-</div>
 
-<script src="/app.js"></script>
 <script>
-  const st = document.getElementById("st");
-  const me = document.getElementById("me");
-  const who = App.getMe();
-  me.textContent = "المستخدم: " + (who.username||"-") + " | الصلاحية: " + (who.role||"-");
+const uploadBtn = document.getElementById("uploadBtn");
+const fileInput = document.getElementById("fileInput");
+const uploadStatus = document.getElementById("uploadStatus");
 
-  if (who.role !== "admin") {
-    App.setStatus(st, "تنبيه: هذه الصفحة للمدير فقط", false);
+uploadBtn.onclick = async () => {
+  if (!fileInput.files.length) {
+    uploadStatus.textContent = "❌ الرجاء اختيار صورة أولاً";
+    return;
   }
 
-  document.getElementById("btnCheck").addEventListener("click", async ()=>{
-    try{
-      const r = await App.API.health();
-      App.setStatus(st, (r && r.ok) ? "API متصل ✅" : "API غير متصل", !!(r && r.ok));
-    }catch(e){
-      App.setStatus(st, "API غير متصل", false);
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  uploadStatus.textContent = "⏳ جارٍ رفع الصورة...";
+
+  try {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      uploadStatus.textContent = "✅ تم رفع الصورة بنجاح";
+      console.log("IMAGE PREVIEW:", data.preview);
+    } else {
+      uploadStatus.textContent = "❌ فشل الرفع: " + (data.error || "");
     }
-  });
+  } catch (e) {
+    uploadStatus.textContent = "❌ خطأ في الاتصال بالـ API";
+  }
+};
 </script>
+
 </body>
 </html>
