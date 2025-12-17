@@ -9,51 +9,144 @@
 <body>
 
 <script>
-(function(){
+/* ✅ حماية المدير: يعتمد فقط على role=admin */
+(function () {
   const role = localStorage.getItem("role");
-  const username = localStorage.getItem("username");
+  const name = localStorage.getItem("username") || localStorage.getItem("name") || "";
 
-  // لو ما في صلاحية: رجّعه لتسجيل الدخول
-  if(role !== "admin" || !username){
-    location.href = "/login/";
+  // إذا ليس admin يرجع لتسجيل الدخول
+  if (role !== "admin") {
+    location.replace("/login/");
+    return;
   }
+
+  // توحيد الاسم في username
+  if (name) localStorage.setItem("username", name);
 })();
 </script>
 
 <div class="container">
   <div class="card">
-    <div class="h1">لوحة المدير</div>
-    <div class="small">المستخدم: <b id="u"></b> | الصلاحية: <b>admin</b></div>
 
-    <div class="row gap" style="margin-top:12px;">
-      <button onclick="location.href='/login/'">تسجيل دخول</button>
-      <button onclick="location.href='/staff/'">فتح شاشة الفاحص</button>
-      <button onclick="location.href='/display/'">فتح شاشة العرض</button>
+    <div class="row" style="justify-content:space-between;align-items:center;gap:12px;">
+      <div>
+        <div class="h1">لوحة المدير</div>
+        <div class="small" id="who"></div>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap;">
+        <a class="btn" href="/login/">تسجيل دخول</a>
+        <a class="btn" href="/staff/">فتح شاشة الفاحص</a>
+        <a class="btn" href="/display/" target="_blank">فتح شاشة العرض</a>
+      </div>
     </div>
 
     <hr>
 
-    <button onclick="checkAPI()">تأكد من API</button>
-    <span id="apiStatus" class="small"></span>
+    <div class="row" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="small">
+        ✅ ملاحظة مهمة: “رفع/تصوير صورة للشاشة” لن يعمل إذا كان API يرجع <b>NOT_FOUND</b> لمسار الصورة.<br>
+        بعد ما تثبت النظام بالكامل، أضف API للصورة وتشتغل من صلاحية المدير فقط.
+      </div>
+
+      <div class="row" style="gap:10px;align-items:center;">
+        <span class="badge" id="apiState">غير معروف</span>
+        <button class="btn" id="checkApiBtn">تأكد من API</button>
+      </div>
+    </div>
+
+    <hr>
+
+    <h3 style="margin:10px 0;">📷 رفع صورة للشاشة</h3>
+    <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;">
+      <input type="file" id="fileInput" accept="image/*" capture="camera">
+      <button class="btn" id="uploadBtn">رفع الصورة</button>
+      <span class="small" id="uploadStatus"></span>
+    </div>
+
+    <div style="margin-top:12px;">
+      <img id="previewImg" alt="preview" style="max-width:100%;border-radius:12px;display:none;">
+    </div>
+
+    <hr>
 
     <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
 </div>
 
 <script>
-document.getElementById("u").textContent = localStorage.getItem("username") || "-";
+  // عرض اسم المستخدم/الدور
+  (function(){
+    const role = localStorage.getItem("role") || "—";
+    const name = localStorage.getItem("username") || localStorage.getItem("name") || "—";
+    document.getElementById("who").textContent = المستخدم: ${name} | الصلاحية: ${role};
+  })();
 
-async function checkAPI(){
-  const s = document.getElementById("apiStatus");
-  s.textContent = "جارٍ الفحص...";
-  try{
-    const r = await fetch("/api/health");
-    const j = await r.json();
-    s.textContent = j.ok ? "✅ جاهز" : "❌ غير جاهز";
-  }catch{
-    s.textContent = "❌ فشل اتصال";
+  // API Health
+  const apiState = document.getElementById("apiState");
+  const checkApiBtn = document.getElementById("checkApiBtn");
+
+  async function checkAPI(){
+    apiState.textContent = "جارٍ الفحص...";
+    try{
+      const r = await fetch("/api/health", { cache: "no-store" });
+      const j = await r.json();
+      if (j && j.ok) {
+        apiState.textContent = "جاهز";
+      } else {
+        apiState.textContent = "غير جاهز";
+      }
+    }catch(e){
+      apiState.textContent = "غير جاهز";
+    }
   }
-}
+  checkApiBtn.addEventListener("click", checkAPI);
+  checkAPI();
+
+  // Upload
+  const uploadBtn = document.getElementById("uploadBtn");
+  const fileInput = document.getElementById("fileInput");
+  const uploadStatus = document.getElementById("uploadStatus");
+  const previewImg = document.getElementById("previewImg");
+
+  uploadBtn.onclick = async () => {
+    if (!fileInput.files.length) {
+      uploadStatus.textContent = "الرجاء اختيار صورة أولاً";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    uploadStatus.textContent = "جارٍ الرفع...";
+    try{
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (data.ok) {
+        uploadStatus.textContent = "✅ تم رفع الصورة بنجاح";
+        if (data.preview) {
+          previewImg.src = data.preview;
+          previewImg.style.display = "block";
+        }
+      } else {
+        uploadStatus.textContent = "❌ فشل الرفع: " + (data.error || "خطأ غير معروف");
+      }
+    }catch(e){
+      uploadStatus.textContent = "❌ فشل الرفع: خطأ اتصال";
+    }
+  };
+
+  // جلب آخر صورة إن وجدت
+  (async function(){
+    try{
+      const r = await fetch("/api/last-image", { cache: "no-store" });
+      const j = await r.json();
+      if (j && j.ok && j.image && j.image.preview) {
+        previewImg.src = j.image.preview;
+        previewImg.style.display = "block";
+      }
+    }catch(e){}
+  })();
 </script>
 
 </body>
