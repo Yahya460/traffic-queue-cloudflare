@@ -8,39 +8,66 @@
 </head>
 <body>
 
-  <div class="container">
-    <div class="card">
-      <div class="h1">لوحة المدير</div>
-      <p class="small" id="who">—</p>
+<script>
+/* ✅ تحقق صلاحية المدير */
+(function () {
+  const role = localStorage.getItem("role");
+  const username = localStorage.getItem("username");
 
-      <ul class="list">
-        <li><a href="/display/">فتح شاشة العرض</a></li>
-        <li><a href="/staff/">فتح شاشة الفاحص</a></li>
-      </ul>
+  if (role !== "admin" || !username) {
+    alert("لا تملك صلاحية الدخول كمدير");
+    location.href = "/login/";
+  }
+})();
+</script>
 
-      <button id="logout" class="btn">تسجيل الخروج</button>
+<div class="container">
+  <div class="card">
+    <div class="h1">لوحة المدير</div>
 
-      <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+    <p class="small">
+      المستخدم: <b id="u"></b> | الصلاحية: <b>admin</b>
+    </p>
+
+    <div class="row gap">
+      <button onclick="location.href='/display/'">فتح شاشة العرض</button>
+      <button onclick="location.href='/staff/'">فتح شاشة الفاحص</button>
+      <button onclick="logout()">تسجيل خروج</button>
+    </div>
+
+    <hr>
+
+    <p class="small">حالة النظام:</p>
+    <button onclick="checkAPI()">تأكد من API</button>
+    <span id="apiStatus"></span>
+
+    <div class="footer">
+      جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
     </div>
   </div>
+</div>
 
-  <script src="/app.js"></script>
-  <script>
-    const me = App.getMe();
-    const who = document.getElementById("who");
+<script>
+document.getElementById("u").textContent =
+  localStorage.getItem("username") || "-";
 
-    // ✅ منع دخول غير المدير
-    if ((me.role || "").toLowerCase() !== "admin") {
-      location.href = "/login/";
-    } else {
-      who.textContent = المستخدم: ${me.name || "—"} | الصلاحية: ${me.role || "—"};
-    }
+async function checkAPI(){
+  const s = document.getElementById("apiStatus");
+  s.textContent = "جارٍ الفحص...";
+  try {
+    const r = await fetch("/api/health");
+    const j = await r.json();
+    s.textContent = j.ok ? "✅ API يعمل" : "❌ API لا يعمل";
+  } catch {
+    s.textContent = "❌ فشل الاتصال";
+  }
+}
 
-    document.getElementById("logout").onclick = () => {
-      App.clearMe();
-      location.href = "/login/";
-    };
-  </script>
+function logout(){
+  localStorage.clear();
+  location.href = "/login/";
+}
+</script>
 
 </body>
 </html>
