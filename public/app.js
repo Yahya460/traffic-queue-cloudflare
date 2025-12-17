@@ -1,61 +1,58 @@
-// public/admin/app.js
+/* public/app.js - Stable App (matches your Worker response) */
+(function () {
+  "use strict";
 
-const App = {
-  getToken() {
-    return localStorage.getItem("token") || "";
-  },
-  getRole() {
-    return localStorage.getItem("role") || "";
-  },
-  getName() {
-    return localStorage.getItem("name") || "";
-  },
-  async api(path, opts = {}) {
-    const headers = new Headers(opts.headers || {});
-    headers.set("content-type", headers.get("content-type") || "application/json");
+  // مفاتيح التخزين (ثابتة)
+  var LS_NAME = "tq_name";
+  var LS_ROLE = "tq_role";
 
-    const token = this.getToken();
-    if (token) headers.set("authorization", Bearer ${token});
+  function setStatus(el, msg, ok) {
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.color = ok === true ? "#16a34a" : ok === false ? "#dc2626" : "#334155";
+  }
 
-    const res = await fetch(path, { ...opts, headers });
+  function setMe(name, role) {
+    if (name) localStorage.setItem(LS_NAME, name); else localStorage.removeItem(LS_NAME);
+    if (role) localStorage.setItem(LS_ROLE, role); else localStorage.removeItem(LS_ROLE);
+  }
 
-    // لو السيرفر يرجّع HTML/نص، نخليه واضح بدل ما يكسر
-    const ct = res.headers.get("content-type") || "";
-    const data = ct.includes("application/json") ? await res.json() : { ok: false, error: await res.text() };
-    if (!res.ok) throw data;
+  function getMe() {
+    return {
+      name: localStorage.getItem(LS_NAME) || "",
+      role: localStorage.getItem(LS_ROLE) || ""
+    };
+  }
+
+  function clearMe() {
+    localStorage.removeItem(LS_NAME);
+    localStorage.removeItem(LS_ROLE);
+  }
+
+  async function fetchJson(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({}, opts.headers || {});
+    var res = await fetch(path, opts);
+    var text = await res.text();
+    var data;
+    try { data = JSON.parse(text); } catch { data = { ok: false, raw: text }; }
+    if (!res.ok) data.ok = false;
+    data._status = res.status;
     return data;
   }
-};
 
-// حماية صفحة المدير
-(function guardAdmin() {
-  const role = App.getRole();
-  const name = App.getName();
+  var API = {
+    health: function () { return fetchJson("/api/health"); },
+    login: function (username, password) {
+      return fetchJson("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ username: username, password: password })
+      });
+    }
+  };
 
-  // تحديث عنوان المستخدم أعلى الصفحة إذا عندك عنصر له id=userInfo
-  const userInfo = document.getElementById("userInfo");
-  if (userInfo) userInfo.textContent = ${name || "—"} | ${role || "—"};
+  function go(path) { location.href = path; }
 
-  if (role !== "admin") {
-    document.body.innerHTML = `
-      <div style="font-family:system-ui;direction:rtl;padding:20px">
-        <h2>❌ لا توجد صلاحية مدير</h2>
-        <p>حسابك الحالي ليس Admin. رجّع تسجيل الدخول بحساب مدير.</p>
-        <button onclick="location.href='/login/'">الرجوع لتسجيل الدخول</button>
-      </div>
-    `;
-  }
+  window.App = { API: API, setStatus: setStatus, setMe: setMe, getMe: getMe, clearMe: clearMe, go: go };
 })();
-
-// مثال: زر "تأكد من API" الموجود عندك
-window.checkApi = async function () {
-  const st = document.getElementById("apiStatus");
-  try {
-    st.textContent = "جارٍ الفحص...";
-    const r = await App.api("/api/health", { method: "GET" });
-    st.textContent = r.ok ? "جاهز ✅" : "غير جاهز ❌";
-  } catch (e) {
-    st.textContent = "خطأ ❌";
-    console.log("API ERROR:", e);
-  }
-};
