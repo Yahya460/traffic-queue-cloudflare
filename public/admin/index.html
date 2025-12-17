@@ -9,13 +9,12 @@
 <body>
 
 <script>
-/* ✅ تحقق صلاحية المدير */
-(function () {
+(function(){
   const role = localStorage.getItem("role");
   const username = localStorage.getItem("username");
 
-  if (role !== "admin" || !username) {
-    alert("لا تملك صلاحية الدخول كمدير");
+  // لو ما في صلاحية: رجّعه لتسجيل الدخول
+  if(role !== "admin" || !username){
     location.href = "/login/";
   }
 })();
@@ -24,48 +23,36 @@
 <div class="container">
   <div class="card">
     <div class="h1">لوحة المدير</div>
+    <div class="small">المستخدم: <b id="u"></b> | الصلاحية: <b>admin</b></div>
 
-    <p class="small">
-      المستخدم: <b id="u"></b> | الصلاحية: <b>admin</b>
-    </p>
-
-    <div class="row gap">
-      <button onclick="location.href='/display/'">فتح شاشة العرض</button>
+    <div class="row gap" style="margin-top:12px;">
+      <button onclick="location.href='/login/'">تسجيل دخول</button>
       <button onclick="location.href='/staff/'">فتح شاشة الفاحص</button>
-      <button onclick="logout()">تسجيل خروج</button>
+      <button onclick="location.href='/display/'">فتح شاشة العرض</button>
     </div>
 
     <hr>
 
-    <p class="small">حالة النظام:</p>
     <button onclick="checkAPI()">تأكد من API</button>
-    <span id="apiStatus"></span>
+    <span id="apiStatus" class="small"></span>
 
-    <div class="footer">
-      جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
-    </div>
+    <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
   </div>
 </div>
 
 <script>
-document.getElementById("u").textContent =
-  localStorage.getItem("username") || "-";
+document.getElementById("u").textContent = localStorage.getItem("username") || "-";
 
 async function checkAPI(){
   const s = document.getElementById("apiStatus");
   s.textContent = "جارٍ الفحص...";
-  try {
+  try{
     const r = await fetch("/api/health");
     const j = await r.json();
-    s.textContent = j.ok ? "✅ API يعمل" : "❌ API لا يعمل";
-  } catch {
-    s.textContent = "❌ فشل الاتصال";
+    s.textContent = j.ok ? "✅ جاهز" : "❌ غير جاهز";
+  }catch{
+    s.textContent = "❌ فشل اتصال";
   }
-}
-
-function logout(){
-  localStorage.clear();
-  location.href = "/login/";
 }
 </script>
 
