@@ -81,7 +81,6 @@ export class QueueDO {
  */
 export default {
   async fetch(request, env) {
-    // ثابت: نفس اسمك اللي تستخدمه في Pages Function
     const id = env.QUEUE.idFromName("main");
     const stub = env.QUEUE.get(id);
     return stub.fetch(request);
