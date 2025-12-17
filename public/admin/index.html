@@ -1,87 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>لوحة المدير</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/styles.css">
 </head>
-
 <body>
+
   <div class="container">
-    <h1>لوحة المدير</h1>
-    <p>المستخدم: يوسف – الصلاحية: admin</p>
+    <div class="card">
+      <div class="h1">لوحة المدير</div>
+      <p class="small" id="who">—</p>
 
-    <div style="margin:20px 0;">
-      <button onclick="location.href='/login/'">تسجيل دخول</button>
-      <button onclick="location.href='/display/'">فتح شاشة العرض</button>
-      <button onclick="location.href='/staff/'">فتح شاشة الفاحص</button>
+      <ul class="list">
+        <li><a href="/display/">فتح شاشة العرض</a></li>
+        <li><a href="/staff/">فتح شاشة الفاحص</a></li>
+      </ul>
+
+      <button id="logout" class="btn">تسجيل الخروج</button>
+
+      <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
     </div>
-
-    <hr>
-
-    <h3>📷 رفع / تصوير صورة للشاشة</h3>
-
-    <input
-      type="file"
-      id="fileInput"
-      accept="image/*"
-      capture="environment"
-      style="margin-bottom:10px;"
-    >
-
-    <br>
-
-    <button id="uploadBtn">رفع الصورة</button>
-
-    <p id="uploadStatus" style="margin-top:10px;"></p>
-
-    <hr>
-
-    <p style="color:#666;font-size:13px;">
-      ملاحظة: هذه الميزة مخصصة للمدير فقط، وستظهر الصورة لاحقًا في شاشة العرض.
-    </p>
-
-    <p style="margin-top:40px;font-size:12px;color:#888;">
-      جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
-    </p>
   </div>
 
-<script>
-const uploadBtn = document.getElementById("uploadBtn");
-const fileInput = document.getElementById("fileInput");
-const uploadStatus = document.getElementById("uploadStatus");
+  <script src="/app.js"></script>
+  <script>
+    const me = App.getMe();
+    const who = document.getElementById("who");
 
-uploadBtn.onclick = async () => {
-  if (!fileInput.files.length) {
-    uploadStatus.textContent = "❌ الرجاء اختيار صورة أولاً";
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
-
-  uploadStatus.textContent = "⏳ جارٍ رفع الصورة...";
-
-  try {
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (data.ok) {
-      uploadStatus.textContent = "✅ تم رفع الصورة بنجاح";
-      console.log("IMAGE PREVIEW:", data.preview);
+    // ✅ منع دخول غير المدير
+    if ((me.role || "").toLowerCase() !== "admin") {
+      location.href = "/login/";
     } else {
-      uploadStatus.textContent = "❌ فشل الرفع: " + (data.error || "");
+      who.textContent = المستخدم: ${me.name || "—"} | الصلاحية: ${me.role || "—"};
     }
-  } catch (e) {
-    uploadStatus.textContent = "❌ خطأ في الاتصال بالـ API";
-  }
-};
-</script>
+
+    document.getElementById("logout").onclick = () => {
+      App.clearMe();
+      location.href = "/login/";
+    };
+  </script>
 
 </body>
 </html>
