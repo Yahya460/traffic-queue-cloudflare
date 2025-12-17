@@ -8,73 +8,98 @@ export class QueueDO {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // health check
+    // ✅ Health
     if (path === "/api/health") {
       return json({ ok: true, status: "alive" });
     }
 
-    // login
+    // ✅ Login (يوسف / 2626)
     if (path === "/api/login" && request.method === "POST") {
-      const body = await request.json();
+      let body = {};
+      try { body = await request.json(); } catch {}
+      const username = (body.username || "").trim();
+      const password = (body.password || "").trim();
 
-      if (
-        body.username === "يوسف" &&
-        body.password === "2626"
-      ) {
-        return json({
-          ok: true,
-          role: "admin",
-          name: "يوسف"
-        });
+      if (username === "يوسف" && password === "2626") {
+        return json({ ok: true, role: "admin", name: "يوسف" });
       }
-
-      return json({ ok: false, error: "INVALID_LOGIN" }, 401);
+      return json({ ok: false, error: "INVALID_CREDENTIALS" }, 401);
     }
 
-    // upload image
+    // ✅ Upload image
     if (path === "/api/upload" && request.method === "POST") {
-      const formData = await request.formData();
-      const file = formData.get("file");
+      try {
+        const form = await request.formData();
+        const file = form.get("file");
 
-      if (!file) {
-        return json({ ok: false, error: "NO_FILE" }, 400);
+        if (!file || typeof file === "string") {
+          return json({ ok: false, error: "NO_FILE" }, 400);
+        }
+
+        const mime = file.type || "image/jpeg";
+        const buf = new Uint8Array(await file.arrayBuffer());
+        const b64 = uint8ToBase64(buf);
+
+        await this.state.storage.put("lastImage", {
+          mime,
+          b64,
+          ts: Date.now(),
+          name: file.name || "upload",
+        });
+
+        const preview = data:${mime};base64,${b64};
+        return json({ ok: true, preview });
+      } catch (e) {
+        return json({ ok: false, error: "UPLOAD_FAILED", message: String(e) }, 500);
       }
-
-      const arrayBuffer = await file.arrayBuffer();
-      const base64 = btoa(
-        String.fromCharCode(...new Uint8Array(arrayBuffer))
-      );
-
-      await this.state.storage.put("lastImage", {
-        type: file.type,
-        data: base64,
-        time: Date.now()
-      });
-
-      return json({ ok: true });
     }
 
-    // get last image
+    // ✅ Last uploaded image
     if (path === "/api/last-image") {
       const img = await this.state.storage.get("lastImage");
+      if (!img) return json({ ok: true, image: null });
 
-      if (!img) {
-        return json({ ok: true, image: null });
-      }
-
-      return json({ ok: true, image: img });
+      return json({
+        ok: true,
+        image: {
+          mime: img.mime,
+          ts: img.ts,
+          name: img.name,
+          preview: data:${img.mime};base64,${img.b64},
+        },
+      });
     }
 
-    // fallback
+    // ❌ Anything else
     return json({ ok: false, error: "NOT_FOUND" }, 404);
   }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+/**
+ * Default Worker export (Durable Object binding name must be QUEUE)
+ * Pages Functions will call the DO stub using /api/*
+ */
+export default {
+  async fetch(request, env) {
+    // ثابت: نفس اسمك اللي تستخدمه في Pages Function
+    const id = env.QUEUE.idFromName("main");
+    const stub = env.QUEUE.get(id);
+    return stub.fetch(request);
+  },
+};
+
+function json(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
-  });
+    headers: { "content-type": "application/json; charset=utf-8" },
+  });
+}
+
+function uint8ToBase64(u8) {
+  let s = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < u8.length; i += chunk) {
+    s += String.fromCharCode(...u8.subarray(i, i + chunk));
+  }
+  return btoa(s);
 }
