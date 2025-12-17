@@ -9,63 +9,84 @@
 <body>
   <div class="container">
     <div class="card">
-      <div class="h1">خاص بتسجيل دخول الفاحص / المدير</div>
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <div>
+          <div class="h1">تسجيل الدخول</div>
+          <div class="small">خاص بالمدير / الفاحص</div>
+        </div>
+      </div>
 
-      <div class="grid">
-        <label class="small">اسم المستخدم</label>
-        <input id="u" placeholder="يوسف" autocomplete="username">
+      <div class="row gap" style="margin-top:12px;">
+        <div style="flex:1">
+          <label class="small">اسم المستخدم</label>
+          <input id="u" type="text" placeholder="مثال: يوسف" autocomplete="username">
+        </div>
+        <div style="flex:1">
+          <label class="small">كلمة المرور</label>
+          <input id="p" type="password" placeholder="••••" autocomplete="current-password">
+        </div>
+      </div>
 
-        <label class="small">كلمة المرور</label>
-        <input id="p" type="password" placeholder="2626" autocomplete="current-password">
+      <div class="row gap" style="margin-top:12px;align-items:center;">
+        <button id="btn">دخول</button>
+        <span id="st" class="small"></span>
+      </div>
 
-        <button id="btn" class="btn">دخول</button>
-
-        <div class="small" id="status">جاهز</div>
+      <div class="small" style="margin-top:10px;opacity:.8">
+        روابط الصفحات:
+        <a href="/admin/">لوحة المدير</a> |
+        <a href="/staff/">شاشة الفاحص</a> |
+        <a href="/display/">شاشة العرض</a>
       </div>
 
       <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
     </div>
   </div>
 
-  <script src="/app.js"></script>
-  <script>
-    const u = document.getElementById("u");
-    const p = document.getElementById("p");
-    const btn = document.getElementById("btn");
-    const statusEl = document.getElementById("status");
+<script>
+const u = document.getElementById("u");
+const p = document.getElementById("p");
+const btn = document.getElementById("btn");
+const st = document.getElementById("st");
 
-    async function doLogin(){
-      try{
-        App.setStatus(statusEl, "جاري تسجيل الدخول...", null);
+async function go(){
+  st.textContent = "جاري الدخول...";
+  btn.disabled = true;
 
-        const r = await App.API.login(u.value.trim(), p.value.trim());
+  try{
+    const res = await fetch("/api/login",{
+      method:"POST",
+      headers:{ "content-type":"application/json" },
+      body: JSON.stringify({ username: u.value.trim(), password: p.value.trim() })
+    });
 
-        if(!r.ok){
-          App.setStatus(statusEl, "فشل تسجيل الدخول", false);
-          return;
-        }
+    const data = await res.json();
 
-        // ✅ هذا الشكل مطابق للـ Worker عندك:
-        // { ok:true, role:"admin", name:"يوسف" }
-        App.setMe(r.name || "", r.role || "");
-
-        App.setStatus(statusEl, "تم تسجيل الدخول بنجاح ✅", true);
-
-        // ✅ التحويل حسب الصلاحية
-        if ((r.role || "").toLowerCase() === "admin") {
-          location.href = "/admin/";
-        } else {
-          location.href = "/staff/";
-        }
-
-      }catch(e){
-        App.setStatus(statusEl, "فشل: تأكد من API", false);
-        console.log(e);
-      }
+    if(!data.ok){
+      st.textContent = "فشل تسجيل الدخول";
+      btn.disabled = false;
+      return;
     }
 
-    btn.addEventListener("click", doLogin);
-    p.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") doLogin(); });
-  </script>
+    // ✅ أهم سطرين لحل مشكلة صلاحيات المدير
+    localStorage.setItem("role", data.role || "");
+    localStorage.setItem("username", data.name || data.username || u.value.trim());
+
+    st.textContent = "تم تسجيل الدخول ✅";
+
+    // توجيه حسب الصلاحية
+    if((data.role || "") === "admin") location.href = "/admin/";
+    else location.href = "/staff/";
+
+  }catch(e){
+    st.textContent = "خطأ اتصال";
+    btn.disabled = false;
+  }
+}
+
+btn.addEventListener("click", go);
+p.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") go(); });
+</script>
+
 </body>
 </html>
