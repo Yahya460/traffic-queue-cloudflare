@@ -3,22 +3,51 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Traffic Queue</title>
+  <title>لوحة المدير - نظام الدور</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <div class="h1">نظام الدور الآلي</div>
-      <p class="small">اختر صفحة:</p>
-      <ul class="list">
-        <li><a href="/login/">تسجيل الدخول</a></li>
-        <li><a href="/display/">شاشة العرض</a></li>
-        <li><a href="/staff/">شاشة الفاحص</a></li>
-        <li><a href="/admin/">لوحة المدير</a></li>
-      </ul>
-      <div class="footer">جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام</div>
+
+<script>
+(async () => {
+  try {
+    const res = await fetch("/api/login", { method: "GET" });
+    const data = await res.json();
+
+    // غير مسجل دخول أو ليس مدير
+    if (!data.ok || data.role !== "admin") {
+      location.href = "/login/";
+    }
+
+    // اسم المستخدم (اختياري للعرض)
+    if (data.name) {
+      document.getElementById("adminName").textContent = data.name;
+    }
+
+  } catch (e) {
+    location.href = "/login/";
+  }
+})();
+</script>
+
+<div class="container">
+  <div class="card">
+    <div class="h1">لوحة المدير</div>
+    <p class="small">
+      مرحبًا <b id="adminName">المدير</b> – صلاحية: <b>admin</b>
+    </p>
+
+    <ul class="list">
+      <li><a href="/display/">فتح شاشة العرض</a></li>
+      <li><a href="/staff/">فتح شاشة الفاحص</a></li>
+      <li><a href="/login/">تسجيل الخروج</a></li>
+    </ul>
+
+    <div class="footer">
+      جميع الحقوق محفوظة للرقيب أول يحيى آل عبدالسلام
     </div>
   </div>
+</div>
+
 </body>
 </html>
