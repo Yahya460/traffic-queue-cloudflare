@@ -1,125 +1,61 @@
-/* public/app.js - Stable window.App (token/username/role) */
-(function () {
-  "use strict";
+// public/admin/app.js
 
-  var LS_TOKEN = "token";
-  var LS_USER  = "username";
-  var LS_ROLE  = "role";
+const App = {
+  getToken() {
+    return localStorage.getItem("token") || "";
+  },
+  getRole() {
+    return localStorage.getItem("role") || "";
+  },
+  getName() {
+    return localStorage.getItem("name") || "";
+  },
+  async api(path, opts = {}) {
+    const headers = new Headers(opts.headers || {});
+    headers.set("content-type", headers.get("content-type") || "application/json");
 
-  function safeJsonParse(txt){ try{return JSON.parse(txt);}catch(e){return null;} }
+    const token = this.getToken();
+    if (token) headers.set("authorization", Bearer ${token});
 
-  function setStatus(el, msg, ok) {
-    if (!el) return;
-    el.textContent = msg || "";
-    el.style.color = ok === true ? "#16a34a" : ok === false ? "#dc2626" : "#334155";
+    const res = await fetch(path, { ...opts, headers });
+
+    // لو السيرفر يرجّع HTML/نص، نخليه واضح بدل ما يكسر
+    const ct = res.headers.get("content-type") || "";
+    const data = ct.includes("application/json") ? await res.json() : { ok: false, error: await res.text() };
+    if (!res.ok) throw data;
+    return data;
   }
+};
 
-  function getToken(){ return localStorage.getItem(LS_TOKEN) || ""; }
-  function setToken(t){ if(t) localStorage.setItem(LS_TOKEN, String(t)); else localStorage.removeItem(LS_TOKEN); }
+// حماية صفحة المدير
+(function guardAdmin() {
+  const role = App.getRole();
+  const name = App.getName();
 
-  function getMe(){
-    return {
-      username: localStorage.getItem(LS_USER) || "",
-      role: localStorage.getItem(LS_ROLE) || ""
-    };
+  // تحديث عنوان المستخدم أعلى الصفحة إذا عندك عنصر له id=userInfo
+  const userInfo = document.getElementById("userInfo");
+  if (userInfo) userInfo.textContent = ${name || "—"} | ${role || "—"};
+
+  if (role !== "admin") {
+    document.body.innerHTML = `
+      <div style="font-family:system-ui;direction:rtl;padding:20px">
+        <h2>❌ لا توجد صلاحية مدير</h2>
+        <p>حسابك الحالي ليس Admin. رجّع تسجيل الدخول بحساب مدير.</p>
+        <button onclick="location.href='/login/'">الرجوع لتسجيل الدخول</button>
+      </div>
+    `;
   }
-  function setMe(username, role){
-    if (username) localStorage.setItem(LS_USER, username); else localStorage.removeItem(LS_USER);
-    if (role) localStorage.setItem(LS_ROLE, role); else localStorage.removeItem(LS_ROLE);
-  }
-
-  function authHeaders(){
-    var h = { "content-type": "application/json; charset=utf-8" };
-    var t = getToken();
-    if (t) h["Authorization"] = "Bearer " + t;
-    return h;
-  }
-
-  function fetchJson(path, opts){
-    opts = opts || {};
-    opts.headers = Object.assign({}, opts.headers || {});
-    return fetch(path, opts).then(function(res){
-      return res.text().then(function(text){
-        var data = safeJsonParse(text);
-        if (!data || typeof data !== "object") data = { ok:false, raw:text };
-        data._status = res.status;
-        if (!res.ok) data.ok = false;
-        return data;
-      });
-    });
-  }
-
-  var API = {
-    health: function(){ return fetchJson("/api/health"); },
-
-    login: function(username, password){
-      return fetchJson("/api/login", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ username: username, password: password })
-      }).then(function(r){
-        if (!r || !r.ok) throw new Error("فشل تسجيل الدخول");
-        var token = r.token || "";
-        var uname = r.username || (r.user && r.user.username) || "";
-        var role  = r.role || (r.user && r.user.role) || "";
-        if (!uname || !role) throw new Error("رد API ناقص (username/role)");
-        return { token: token, username: uname, role: role };
-      });
-    },
-
-    logout: function(){
-      return fetchJson("/api/logout", { method:"POST", headers: authHeaders() });
-    },
-
-    state: function(){ return fetchJson("/api/state"); },
-
-    next: function(number, gender){
-      return fetchJson("/api/next", {
-        method:"POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ number: number, gender: gender })
-      });
-    },
-
-    prev: function(){
-      return fetchJson("/api/prev", { method:"POST", headers: authHeaders() });
-    },
-
-    // إدارة الموظفين
-    usersList: function(){
-      return fetchJson("/api/users", { method:"GET", headers: authHeaders() });
-    },
-    usersAdd: function(username, password, role){
-      return fetchJson("/api/users", {
-        method:"POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ username: username, password: password, role: role || "staff" })
-      });
-    },
-    usersDelete: function(username){
-      return fetchJson("/api/users/" + encodeURIComponent(username), {
-        method:"DELETE",
-        headers: authHeaders()
-      });
-    },
-    usersResetPassword: function(username, password){
-      return fetchJson("/api/users/" + encodeURIComponent(username) + "/password", {
-        method:"PUT",
-        headers: authHeaders(),
-        body: JSON.stringify({ password: password })
-      });
-    }
-  };
-
-  function go(path){ window.location.href = path; }
-
-  window.App = {
-    API: API,
-    setStatus: setStatus,
-    getToken: getToken,
-    setToken: setToken,
-    getMe: getMe,
-    setMe: setMe,
-    go: go
-  };
 })();
+
+// مثال: زر "تأكد من API" الموجود عندك
+window.checkApi = async function () {
+  const st = document.getElementById("apiStatus");
+  try {
+    st.textContent = "جارٍ الفحص...";
+    const r = await App.api("/api/health", { method: "GET" });
+    st.textContent = r.ok ? "جاهز ✅" : "غير جاهز ❌";
+  } catch (e) {
+    st.textContent = "خطأ ❌";
+    console.log("API ERROR:", e);
+  }
+};
